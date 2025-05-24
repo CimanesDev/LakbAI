@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 interface Itinerary {
   id: string;
@@ -200,23 +201,42 @@ const Dashboard = () => {
   const allTransportation = Array.from(new Set(itineraries.flatMap(it => it.transportation)));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gray-50 relative">
+      <AnimatedBackground />
+      
       <Navbar user={user} onSignOut={handleSignOut} />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 relative z-10">
         {/* Welcome Section */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">
-              Welcome back, {user?.user_metadata?.full_name || 'Traveler'} 👋
-            </h1>
-            <p className="text-sm text-gray-600">
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-xl font-semibold text-[#0032A0]">
+                Welcome back, {user?.user_metadata?.full_name || 'Traveler'} 👋
+              </h1>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 bg-[#0032A0]/10 text-[#0032A0] text-sm rounded-full font-medium">
+                  {user?.user_metadata?.subscription_tier || 'Free'} Tier
+                </span>
+                {(!user?.user_metadata?.subscription_tier || user?.user_metadata?.subscription_tier === 'Free') && (
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className="border-[#0032A0] text-[#0032A0] hover:bg-[#0032A0] hover:text-white transition-colors"
+                    onClick={() => navigate('/pricing')}
+                  >
+                    Upgrade to Premium
+                  </Button>
+                )}
+              </div>
+            </div>
+            <p className="text-sm text-[#0032A0]/70">
               Manage your travel itineraries and plan your next adventure
             </p>
           </div>
           <Button 
             onClick={() => navigate('/planning')} 
-            className="bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white px-6 py-2 text-sm shadow-lg hover:shadow-xl transition-all duration-300"
+            className="bg-[#0032A0] hover:bg-[#0032A0]/90 text-white px-6 py-2 text-sm shadow-lg hover:shadow-xl transition-all duration-300"
           >
             <Plus className="h-4 w-4 mr-2" />
             Plan New Trip
@@ -227,17 +247,17 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="flex gap-4 w-full md:w-auto">
             <div className="relative flex-1 md:flex-none">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#0032A0]/50" />
               <Input
                 placeholder="Search trips..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-full md:w-[300px]"
+                className="pl-10 w-full md:w-[300px] border-[#0032A0]/20 focus:border-[#0032A0]"
               />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" className="gap-2 border-[#0032A0]/20 text-[#0032A0] hover:bg-[#0032A0]/10">
                   Sort by
                   <ChevronDown className="h-4 w-4" />
                 </Button>
@@ -254,7 +274,7 @@ const Dashboard = () => {
             <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className="gap-2"
+              className="gap-2 border-[#0032A0]/20 text-[#0032A0] hover:bg-[#0032A0]/10"
             >
               <Filter className="h-4 w-4" />
               Filters
@@ -265,11 +285,11 @@ const Dashboard = () => {
 
         {/* Filters */}
         {showFilters && (
-          <Card className="max-w-7xl mx-auto mb-8 bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+          <Card className="max-w-7xl mx-auto mb-8 bg-white border border-[#0032A0]/20 shadow-xl">
             <CardContent className="p-6">
               <div className="space-y-6">
                 <div>
-                  <h3 className="font-semibold mb-3">Interests</h3>
+                  <h3 className="font-semibold mb-3 text-[#0032A0]">Interests</h3>
                   <div className="flex flex-wrap gap-2">
                     {allInterests.map((interest) => (
                       <Button
@@ -282,8 +302,8 @@ const Dashboard = () => {
                             : [...prev, interest]
                         )}
                         className={selectedInterests.includes(interest)
-                          ? 'bg-gradient-to-r from-emerald-500 to-blue-500 text-white'
-                          : 'hover:bg-emerald-50'
+                          ? 'bg-[#0032A0] text-white'
+                          : 'hover:bg-[#0032A0]/10 text-[#0032A0] border-[#0032A0]'
                         }
                       >
                         {interest}
@@ -292,7 +312,7 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-3">Transportation</h3>
+                  <h3 className="font-semibold mb-3 text-[#0032A0]">Transportation</h3>
                   <div className="flex flex-wrap gap-2">
                     {allTransportation.map((transport) => (
                       <Button
@@ -305,8 +325,8 @@ const Dashboard = () => {
                             : [...prev, transport]
                         )}
                         className={selectedTransportation.includes(transport)
-                          ? 'bg-gradient-to-r from-emerald-500 to-blue-500 text-white'
-                          : 'hover:bg-emerald-50'
+                          ? 'bg-[#0032A0] text-white'
+                          : 'hover:bg-[#0032A0]/10 text-[#0032A0] border-[#0032A0]'
                         }
                       >
                         {transport}
@@ -321,26 +341,26 @@ const Dashboard = () => {
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading your trips...</p>
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#0032A0] mx-auto"></div>
+            <p className="mt-4 text-[#0032A0]/70">Loading your trips...</p>
           </div>
         ) : filteredItineraries.length === 0 ? (
-          <Card className="max-w-2xl mx-auto text-center py-12 bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+          <Card className="max-w-2xl mx-auto text-center py-12 bg-white border border-[#0032A0]/20 shadow-xl">
             <CardContent>
-              <div className="p-4 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+              <div className="p-4 bg-[#0032A0] rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
                 <Plane className="h-10 w-10 text-white" />
               </div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-3">
+              <h3 className="text-2xl font-semibold text-[#0032A0] mb-3">
                 {itineraries.length === 0 ? "No trips yet" : "No trips match your filters"}
               </h3>
-              <p className="text-gray-600 mb-8 text-lg">
+              <p className="text-[#0032A0]/70 mb-8 text-lg">
                 {itineraries.length === 0 
                   ? "Start planning your first adventure with LakbAI"
                   : "Try adjusting your search or filters"}
               </p>
               <Button 
                 onClick={() => navigate('/planning')}
-                className="bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white px-8 py-6 text-lg"
+                className="bg-[#0032A0] hover:bg-[#0032A0]/90 text-white px-8 py-6 text-lg"
               >
                 Plan Your First Trip
               </Button>
@@ -350,38 +370,38 @@ const Dashboard = () => {
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* Budget Tracker */}
-              <Card className="lg:col-span-1 bg-white/80 backdrop-blur-sm border-0 shadow-xl h-fit">
-                <CardHeader className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white rounded-t-lg py-4">
+              <Card className="lg:col-span-1 bg-white border border-[#0032A0]/20 shadow-xl h-fit">
+                <CardHeader className="bg-[#0032A0] text-white rounded-t-lg py-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle className="flex items-center gap-2 text-lg">
                         <DollarSign className="h-4 w-4" />
                         Budget Overview
                       </CardTitle>
-                      <CardDescription className="text-emerald-50 text-sm">
+                      <CardDescription className="text-white/90 text-sm">
                         Track your travel expenses
                       </CardDescription>
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold">₱{totalBudget.toLocaleString()}</p>
-                      <p className="text-sm text-emerald-50">Total Budget</p>
+                      <p className="text-sm text-white/90">Total Budget</p>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg">
-                      <h3 className="text-sm font-medium text-gray-600 mb-1">Spent</h3>
-                      <p className="text-xl font-bold text-blue-600">₱{totalSpent.toLocaleString()}</p>
+                    <div className="text-center p-3 bg-[#BF0D3E]/5 rounded-lg">
+                      <h3 className="text-sm font-medium text-[#0032A0] mb-1">Spent</h3>
+                      <p className="text-xl font-bold text-[#BF0D3E]">₱{totalSpent.toLocaleString()}</p>
                     </div>
-                    <div className="text-center p-3 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg">
-                      <h3 className="text-sm font-medium text-gray-600 mb-1">Remaining</h3>
-                      <p className="text-xl font-bold text-purple-600">₱{remainingBudget.toLocaleString()}</p>
+                    <div className="text-center p-3 bg-[#FED141]/5 rounded-lg">
+                      <h3 className="text-sm font-medium text-[#0032A0] mb-1">Remaining</h3>
+                      <p className="text-xl font-bold text-[#FED141]">₱{remainingBudget.toLocaleString()}</p>
                     </div>
                   </div>
-                  <div className="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="mt-3 h-2 bg-[#0032A0]/10 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-gradient-to-r from-emerald-500 to-blue-500 transition-all duration-500"
+                      className="h-full bg-[#0032A0] transition-all duration-500"
                       style={{ width: `${(totalSpent / totalBudget) * 100}%` }}
                     />
                   </div>
@@ -394,32 +414,32 @@ const Dashboard = () => {
                   {filteredItineraries.map((itinerary) => (
                     <Card 
                       key={itinerary.id} 
-                      className="group hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer border-0 bg-white/80 backdrop-blur-sm"
+                      className="group hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer bg-white border border-[#0032A0]/20"
                       onClick={() => navigate(`/itinerary/${itinerary.id}`)}
                     >
-                      <CardHeader className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white rounded-t-lg">
+                      <CardHeader className="bg-[#0032A0] text-white rounded-t-lg">
                         <CardTitle className="flex items-center gap-2">
                           <MapPin className="h-5 w-5" />
                           {itinerary.title}
                         </CardTitle>
-                        <CardDescription className="text-emerald-50 text-lg">
+                        <CardDescription className="text-white/90 text-lg">
                           {itinerary.destination}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="p-6">
                         <div className="space-y-4">
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Clock className="h-4 w-4 text-blue-500" />
+                          <div className="flex items-center gap-2 text-sm text-[#0032A0]/70">
+                            <Clock className="h-4 w-4 text-[#0032A0]" />
                             {itinerary.duration} days
                           </div>
                           {itinerary.budget && (
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <DollarSign className="h-4 w-4 text-emerald-500" />
+                            <div className="flex items-center gap-2 text-sm text-[#0032A0]/70">
+                              <DollarSign className="h-4 w-4 text-[#BF0D3E]" />
                               ₱{itinerary.budget.toLocaleString()}
                             </div>
                           )}
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Calendar className="h-4 w-4 text-purple-500" />
+                          <div className="flex items-center gap-2 text-sm text-[#0032A0]/70">
+                            <Calendar className="h-4 w-4 text-[#FED141]" />
                             Created {formatDate(itinerary.created_at)}
                           </div>
                         </div>
@@ -429,13 +449,13 @@ const Dashboard = () => {
                             {itinerary.interests.slice(0, 3).map((interest, index) => (
                               <span
                                 key={index}
-                                className="px-3 py-1 bg-gradient-to-r from-emerald-100 to-blue-100 text-emerald-800 text-xs rounded-full font-medium"
+                                className="px-3 py-1 bg-[#BF0D3E]/10 text-[#BF0D3E] text-xs rounded-full font-medium"
                               >
                                 {interest}
                               </span>
                             ))}
                             {itinerary.interests.length > 3 && (
-                              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
+                              <span className="px-3 py-1 bg-[#0032A0]/10 text-[#0032A0] text-xs rounded-full font-medium">
                                 +{itinerary.interests.length - 3} more
                               </span>
                             )}
@@ -445,7 +465,7 @@ const Dashboard = () => {
                         <div className="mt-6 flex justify-between items-center">
                           <Button 
                             variant="ghost" 
-                            className="group-hover:text-emerald-600 transition-colors"
+                            className="group-hover:text-[#0032A0] transition-colors"
                           >
                             View Details
                             <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -453,7 +473,7 @@ const Dashboard = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                            className="text-[#BF0D3E] hover:text-[#BF0D3E] hover:bg-[#BF0D3E]/10"
                             onClick={(e) => handleDeleteClick(e, itinerary.id)}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -472,16 +492,16 @@ const Dashboard = () => {
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete Trip</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogTitle className="text-[#0032A0]">Delete Trip</AlertDialogTitle>
+              <AlertDialogDescription className="text-[#0032A0]/70">
                 Are you sure you want to delete this trip? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className="border-[#0032A0]/20 text-[#0032A0] hover:bg-[#0032A0]/10">Cancel</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteConfirm}
-                className="bg-red-500 hover:bg-red-600 text-white"
+                className="bg-[#BF0D3E] hover:bg-[#BF0D3E]/90 text-white"
               >
                 Delete
               </AlertDialogAction>

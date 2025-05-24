@@ -197,13 +197,13 @@ const TripPlanningForm = () => {
 
   return (
     <Card className="w-full max-w-3xl mx-auto shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
-      <CardHeader className="bg-gradient-to-r from-emerald-500 to-blue-500 text-white rounded-t-lg">
+      <CardHeader className="bg-[#0032A0] text-white rounded-t-lg">
         <CardTitle className="flex items-center gap-3 text-2xl">
           <MapPin className="h-7 w-7" />
-          Plan Your Perfect Trip! ✈️
+          Plan Your Perfect Trip! 
         </CardTitle>
-        <CardDescription className="text-emerald-50 text-lg">
-          Tell us where you want to go and what you want to do. We'll create an amazing itinerary! 🗺️
+        <CardDescription className="text-white/90 text-lg">
+          Tell us where you want to go and what you want to do. We'll create an amazing itinerary! 
         </CardDescription>
       </CardHeader>
       <CardContent className="p-8">
@@ -214,19 +214,19 @@ const TripPlanningForm = () => {
               key={step}
               className={`flex-1 text-center ${
                 step < currentStep
-                  ? 'text-emerald-500'
+                  ? 'text-[#0032A0]'
                   : step === currentStep
-                  ? 'text-blue-500'
-                  : 'text-gray-400'
+                  ? 'text-[#0032A0]'
+                  : 'text-[#0032A0]/40'
               }`}
             >
               <div
                 className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center mb-2 ${
                   step < currentStep
-                    ? 'bg-emerald-500 text-white'
+                    ? 'bg-[#0032A0] text-white'
                     : step === currentStep
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200'
+                    ? 'bg-[#0032A0] text-white'
+                    : 'bg-[#0032A0]/20'
                 }`}
               >
                 {step}
@@ -246,9 +246,9 @@ const TripPlanningForm = () => {
           >
             {currentStep === 1 && (
               <div className="space-y-6">
-                <Label className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-red-500" />
-                  Where are you going? 🏝️
+                <Label className="text-lg font-semibold text-[#0032A0] flex items-center gap-2">
+                  <Heart className="h-5 w-5 text-[#BF0D3E]" />
+                  Where are you going? 
                 </Label>
                 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -260,8 +260,8 @@ const TripPlanningForm = () => {
                       size="sm"
                       onClick={() => handleDestinationSelect(dest)}
                       className={`text-xs h-auto p-3 ${destination === dest 
-                        ? 'bg-gradient-to-r from-emerald-500 to-blue-500 text-white' 
-                        : 'hover:bg-emerald-50 hover:border-emerald-300'
+                        ? 'bg-[#0032A0] text-white' 
+                        : 'hover:bg-[#0032A0]/10 hover:border-[#0032A0] text-[#0032A0]'
                       }`}
                     >
                       {dest}
@@ -274,7 +274,7 @@ const TripPlanningForm = () => {
                     placeholder="Or type another destination..."
                     value={customDestination}
                     onChange={(e) => setCustomDestination(e.target.value)}
-                    className="flex-1 border-emerald-200 focus:border-emerald-500"
+                    className="flex-1 border-[#0032A0]/20 focus:border-[#0032A0]"
                   />
                   <Button
                     type="button"
@@ -282,16 +282,16 @@ const TripPlanningForm = () => {
                     size="sm"
                     onClick={addCustomDestination}
                     disabled={!customDestination.trim()}
-                    className="px-4 hover:bg-emerald-50"
+                    className="px-4 hover:bg-[#0032A0]/10 text-[#0032A0] border-[#0032A0]/20"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
 
                 {destination && (
-                  <div className="p-4 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border border-emerald-200">
-                    <p className="text-sm font-medium text-emerald-900">Selected Destination:</p>
-                    <p className="text-emerald-700 font-semibold text-lg">{destination} 📍</p>
+                  <div className="p-4 bg-[#0032A0]/5 rounded-lg border border-[#0032A0]/20">
+                    <p className="text-sm font-medium text-[#0032A0]">Selected Destination:</p>
+                    <p className="text-[#0032A0] font-semibold text-lg">{destination} 📍</p>
                   </div>
                 )}
               </div>
@@ -301,8 +301,8 @@ const TripPlanningForm = () => {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
-                    <Label htmlFor="duration" className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-                      <Calendar className="h-5 w-5 text-blue-500" />
+                    <Label htmlFor="duration" className="flex items-center gap-2 text-lg font-semibold text-[#0032A0]">
+                      <Calendar className="h-5 w-5 text-[#0032A0]" />
                       How many days? 📅
                     </Label>
                     <Input
@@ -314,12 +314,12 @@ const TripPlanningForm = () => {
                       onChange={(e) => setDuration(e.target.value)}
                       placeholder="e.g., 3 days"
                       required
-                      className="border-blue-200 focus:border-blue-500 text-lg p-3"
+                      className="border-[#0032A0]/20 focus:border-[#0032A0] text-lg p-3"
                     />
                   </div>
                   <div className="space-y-3">
-                    <Label htmlFor="budget" className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-                      <DollarSign className="h-5 w-5 text-green-500" />
+                    <Label htmlFor="budget" className="flex items-center gap-2 text-lg font-semibold text-[#0032A0]">
+                      <DollarSign className="h-5 w-5 text-[#BF0D3E]" />
                       Your budget? (optional) 💰
                     </Label>
                     <Input
@@ -329,14 +329,14 @@ const TripPlanningForm = () => {
                       value={budget}
                       onChange={(e) => setBudget(e.target.value)}
                       placeholder="e.g., 5000"
-                      className="border-green-200 focus:border-green-500 text-lg p-3"
+                      className="border-[#0032A0]/20 focus:border-[#0032A0] text-lg p-3"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <Label className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-                    <Car className="h-5 w-5 text-purple-500" />
+                <div className="space-y-4">
+                  <Label className="flex items-center gap-2 text-lg font-semibold text-[#0032A0]">
+                    <Car className="h-5 w-5 text-[#0032A0]" />
                     Transportation 🚗
                   </Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -349,8 +349,8 @@ const TripPlanningForm = () => {
                         onClick={() => toggleTransportation(name)}
                         className={`text-xs h-auto p-3 flex items-center gap-2 ${
                           selectedTransportation.includes(name)
-                            ? 'bg-gradient-to-r from-emerald-500 to-blue-500 text-white'
-                            : 'hover:bg-emerald-50 hover:border-emerald-300'
+                            ? 'bg-[#0032A0] text-white'
+                            : 'hover:bg-[#0032A0]/10 hover:border-[#0032A0] text-[#0032A0]'
                         }`}
                       >
                         {icon}
@@ -364,7 +364,7 @@ const TripPlanningForm = () => {
                       placeholder="Or type another transportation option..."
                       value={customTransportation}
                       onChange={(e) => setCustomTransportation(e.target.value)}
-                      className="flex-1 border-purple-200 focus:border-purple-500"
+                      className="flex-1 border-[#0032A0]/20 focus:border-[#0032A0]"
                     />
                     <Button
                       type="button"
@@ -372,7 +372,7 @@ const TripPlanningForm = () => {
                       size="sm"
                       onClick={addCustomTransportation}
                       disabled={!customTransportation.trim()}
-                      className="px-4 hover:bg-purple-50"
+                      className="px-4 hover:bg-[#0032A0]/10 text-[#0032A0] border-[#0032A0]/20"
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -384,13 +384,13 @@ const TripPlanningForm = () => {
                         <Badge
                           key={transport}
                           variant="secondary"
-                          className="bg-gradient-to-r from-emerald-100 to-blue-100 text-emerald-800 hover:bg-gradient-to-r hover:from-emerald-200 hover:to-blue-200"
+                          className="bg-[#0032A0]/10 text-[#0032A0] hover:bg-[#0032A0]/20"
                         >
                           {transport}
                           <button
                             type="button"
                             onClick={() => removeTransportation(transport)}
-                            className="ml-2 hover:text-red-500"
+                            className="ml-2 hover:text-[#BF0D3E]"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -404,8 +404,8 @@ const TripPlanningForm = () => {
 
             {currentStep === 3 && (
               <div className="space-y-6">
-                <Label className="flex items-center gap-2 text-lg font-semibold text-gray-800">
-                  <Heart className="h-5 w-5 text-pink-500" />
+                <Label className="flex items-center gap-2 text-lg font-semibold text-[#0032A0]">
+                  <Heart className="h-5 w-5 text-[#BF0D3E]" />
                   What are your interests? 🎯
                 </Label>
                 
@@ -419,8 +419,8 @@ const TripPlanningForm = () => {
                       onClick={() => toggleInterest(interest)}
                       className={`text-xs h-auto p-3 ${
                         selectedInterests.includes(interest)
-                          ? 'bg-gradient-to-r from-emerald-500 to-blue-500 text-white'
-                          : 'hover:bg-emerald-50 hover:border-emerald-300'
+                          ? 'bg-[#0032A0] text-white'
+                          : 'hover:bg-[#0032A0]/10 hover:border-[#0032A0] text-[#0032A0]'
                       }`}
                     >
                       {interest}
@@ -433,7 +433,7 @@ const TripPlanningForm = () => {
                     placeholder="Or type another interest..."
                     value={customInterest}
                     onChange={(e) => setCustomInterest(e.target.value)}
-                    className="flex-1 border-pink-200 focus:border-pink-500"
+                    className="flex-1 border-[#0032A0]/20 focus:border-[#0032A0]"
                   />
                   <Button
                     type="button"
@@ -441,7 +441,7 @@ const TripPlanningForm = () => {
                     size="sm"
                     onClick={addCustomInterest}
                     disabled={!customInterest.trim()}
-                    className="px-4 hover:bg-pink-50"
+                    className="px-4 hover:bg-[#0032A0]/10 text-[#0032A0] border-[#0032A0]/20"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -453,13 +453,13 @@ const TripPlanningForm = () => {
                       <Badge
                         key={interest}
                         variant="secondary"
-                        className="bg-gradient-to-r from-emerald-100 to-blue-100 text-emerald-800 hover:bg-gradient-to-r hover:from-emerald-200 hover:to-blue-200"
+                        className="bg-[#0032A0]/10 text-[#0032A0] hover:bg-[#0032A0]/20"
                       >
                         {interest}
                         <button
                           type="button"
                           onClick={() => removeInterest(interest)}
-                          className="ml-2 hover:text-red-500"
+                          className="ml-2 hover:text-[#BF0D3E]"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -471,13 +471,13 @@ const TripPlanningForm = () => {
             )}
           </motion.div>
 
-          <div className="flex justify-between pt-6">
+          <div className="flex justify-between mt-8">
             {currentStep > 1 && (
               <Button
                 type="button"
                 variant="outline"
                 onClick={prevStep}
-                className="hover:bg-emerald-50"
+                className="hover:bg-[#0032A0]/10 text-[#0032A0] border-[#0032A0]/20"
               >
                 Previous
               </Button>
@@ -486,7 +486,7 @@ const TripPlanningForm = () => {
               <Button
                 type="button"
                 onClick={nextStep}
-                className="bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white ml-auto"
+                className="bg-[#0032A0] hover:bg-[#0032A0]/90 text-white ml-auto"
               >
                 Next
               </Button>
@@ -494,7 +494,7 @@ const TripPlanningForm = () => {
               <Button
                 type="submit"
                 disabled={isSubmitting || selectedInterests.length === 0}
-                className="bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white ml-auto"
+                className="bg-[#0032A0] hover:bg-[#0032A0]/90 text-white ml-auto"
               >
                 {isSubmitting ? (
                   <>

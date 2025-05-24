@@ -4,6 +4,7 @@ import TripPlanningForm from "@/components/TripPlanningForm";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 const Planning = () => {
   const navigate = useNavigate();
@@ -15,9 +16,9 @@ const Planning = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gray-50 relative">
+      <AnimatedBackground />
       <Navbar user={user} onSignOut={handleSignOut} />
-      
       <section className="container mx-auto px-4 py-16">
         <TripPlanningForm />
       </section>
