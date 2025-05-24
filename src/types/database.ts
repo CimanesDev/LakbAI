@@ -25,7 +25,9 @@ export type Json =
 export function parseItineraryData(data: Json): ItineraryDay[] | null {
   if (!data) return null;
   try {
-    return JSON.parse(JSON.stringify(data)) as ItineraryDay[];
+    const parsed = JSON.parse(JSON.stringify(data)) as ItineraryDay[];
+    console.log('Parsed Itinerary Data:', JSON.stringify(parsed, null, 2));
+    return parsed;
   } catch (error) {
     console.error('Error parsing itinerary data:', error);
     return null;
@@ -33,5 +35,12 @@ export function parseItineraryData(data: Json): ItineraryDay[] | null {
 }
 
 export function stringifyItineraryData(data: ItineraryDay[]): Json {
-  return JSON.parse(JSON.stringify(data));
+  try {
+    const stringified = JSON.parse(JSON.stringify(data));
+    console.log('Stringified Itinerary Data:', JSON.stringify(stringified, null, 2));
+    return stringified;
+  } catch (error) {
+    console.error('Error stringifying itinerary data:', error);
+    throw error;
+  }
 } 

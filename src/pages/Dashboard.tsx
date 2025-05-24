@@ -57,6 +57,11 @@ const Dashboard = () => {
   useEffect(() => {
     if (user) {
       fetchItineraries();
+      
+      // Only check and update tier if not already premium
+      if (user.email === 'cimanesdev@gmail.com' && user.user_metadata?.subscription_tier !== 'Premium') {
+        updateUserTier();
+      }
     }
   }, [user]);
 
@@ -199,6 +204,24 @@ const Dashboard = () => {
   // Get unique interests and transportation options for filters
   const allInterests = Array.from(new Set(itineraries.flatMap(it => it.interests)));
   const allTransportation = Array.from(new Set(itineraries.flatMap(it => it.transportation)));
+
+  const updateUserTier = async () => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { subscription_tier: 'Premium' }
+      });
+
+      if (error) {
+        console.error('Error updating user tier:', error);
+        return;
+      }
+
+      // Force a page refresh to get the updated user data
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating user tier:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 relative">
