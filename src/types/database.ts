@@ -1,5 +1,12 @@
 import type { ItineraryDay } from '@/integrations/gemini/client';
 
+export interface Accommodation {
+  name: string;
+  location: string;
+  check_in?: string;
+  check_out?: string;
+}
+
 export interface DatabaseItinerary {
   id: string;
   user_id: string;
@@ -9,6 +16,7 @@ export interface DatabaseItinerary {
   budget: number;
   transportation: string[];
   interests: string[];
+  accommodation?: Accommodation;
   itinerary_data: Json;
   created_at: string;
   updated_at: string;

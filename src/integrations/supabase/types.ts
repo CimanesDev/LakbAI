@@ -20,6 +20,7 @@ export type Database = {
           itinerary_data: Json | null
           title: string
           transportation: string[] | null
+          accommodation: Json | null
           updated_at: string
           user_id: string
         }
@@ -33,6 +34,7 @@ export type Database = {
           itinerary_data?: Json | null
           title: string
           transportation?: string[] | null
+          accommodation?: Json | null
           updated_at?: string
           user_id: string
         }
@@ -46,6 +48,7 @@ export type Database = {
           itinerary_data?: Json | null
           title?: string
           transportation?: string[] | null
+          accommodation?: Json | null
           updated_at?: string
           user_id?: string
         }

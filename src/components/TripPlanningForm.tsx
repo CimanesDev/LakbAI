@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, MapPin, Calendar, DollarSign, Car, Heart, Plane, Bus, Ship, Bus as BusIcon, Car as CarIcon } from "lucide-react";
+import { X, Plus, MapPin, Calendar, DollarSign, Car, Heart, Plane, Bus, Ship, Bus as BusIcon, Car as CarIcon, Landmark } from "lucide-react";
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,6 +27,10 @@ const TripPlanningForm = () => {
   const [customInterest, setCustomInterest] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [accommodationName, setAccommodationName] = useState('');
+  const [accommodationLocation, setAccommodationLocation] = useState('');
+  const [accommodationCheckIn, setAccommodationCheckIn] = useState('');
+  const [accommodationCheckOut, setAccommodationCheckOut] = useState('');
 
   // Filipino-focused destinations
   const popularDestinations = [
@@ -135,6 +139,12 @@ const TripPlanningForm = () => {
           budget: budget ? parseFloat(budget) : null,
           transportation: selectedTransportation,
           interests: selectedInterests,
+          accommodation: (accommodationName || accommodationLocation || accommodationCheckIn || accommodationCheckOut) ? {
+            name: accommodationName,
+            location: accommodationLocation,
+            check_in: accommodationCheckIn,
+            check_out: accommodationCheckOut
+          } : null,
         })
         .select()
         .single();
@@ -330,6 +340,41 @@ const TripPlanningForm = () => {
                       onChange={(e) => setBudget(e.target.value)}
                       placeholder="e.g., 5000"
                       className="border-[#0032A0]/20 focus:border-[#0032A0] text-lg p-3"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3 bg-[#0032A0]/5 rounded-lg p-4 border border-[#0032A0]/10">
+                  <Label className="flex items-center gap-2 text-lg font-semibold text-[#0032A0]">
+                    <Landmark className="h-5 w-5 text-[#0032A0]" />
+                    Accommodation (optional)
+                  </Label>
+                  <Input
+                    placeholder="Hotel/Place Name"
+                    value={accommodationName}
+                    onChange={e => setAccommodationName(e.target.value)}
+                    className="border-[#0032A0]/20 focus:border-[#0032A0]"
+                  />
+                  <Input
+                    placeholder="Location (City, Area, etc.)"
+                    value={accommodationLocation}
+                    onChange={e => setAccommodationLocation(e.target.value)}
+                    className="border-[#0032A0]/20 focus:border-[#0032A0]"
+                  />
+                  <div className="flex gap-3">
+                    <Input
+                      type="date"
+                      placeholder="Check-in"
+                      value={accommodationCheckIn}
+                      onChange={e => setAccommodationCheckIn(e.target.value)}
+                      className="border-[#0032A0]/20 focus:border-[#0032A0]"
+                    />
+                    <Input
+                      type="date"
+                      placeholder="Check-out"
+                      value={accommodationCheckOut}
+                      onChange={e => setAccommodationCheckOut(e.target.value)}
+                      className="border-[#0032A0]/20 focus:border-[#0032A0]"
                     />
                   </div>
                 </div>

@@ -58,7 +58,13 @@ export async function generateItinerary(
   budget: number | null,
   transportation: string[],
   interests: string[],
-  isPremium: boolean = false
+  isPremium: boolean = false,
+  accommodation?: {
+    name: string;
+    location: string;
+    check_in?: string;
+    check_out?: string;
+  }
 ): Promise<ItineraryDay[]> {
   console.log('Generating itinerary with premium:', isPremium);
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
@@ -66,15 +72,29 @@ export async function generateItinerary(
   const basePrompt = `Create a detailed ${duration}-day travel itinerary for ${destination} in the Philippines with the following preferences:
 - Transportation: ${transportation.join(', ')}
 - Interests: ${interests.join(', ')}
-${budget ? `- Budget: ₱${budget.toLocaleString()}` : ''}
+${budget ? `- Total Budget: ₱${budget.toLocaleString()} (approximately ₱${Math.floor(budget / duration).toLocaleString()} per day)` : ''}
+${accommodation ? `- Accommodation: ${accommodation.name} in ${accommodation.location}${accommodation.check_in ? ` (Check-in: ${accommodation.check_in})` : ''}${accommodation.check_out ? ` (Check-out: ${accommodation.check_out})` : ''}` : ''}
+
+Important Guidelines:
+${accommodation ? '- Skip check-in/check-out activities since accommodation is already arranged\n' : ''}- Allocate the budget realistically across activities, transportation, and meals
+- Include a mix of free/inexpensive and premium experiences
+- For each activity, provide detailed cost breakdowns including:
+  * Entry fees
+  * Transportation costs
+  * Meal costs
+  * Any additional expenses
+- Ensure the total cost of activities per day stays within the daily budget
+- Include budget-saving tips and alternatives where possible
 
 Make the itinerary realistic, considering:
 - Travel time between locations
 - Opening hours of attractions
-- Local transportation options
+- Local transportation options and costs
 - Weather considerations
 - Cultural experiences
-- Local cuisine recommendations`;
+- Local cuisine recommendations
+- Peak/off-peak pricing
+- Seasonal variations in costs`;
 
   const premiumPrompt = `
 For each day, provide:
@@ -85,23 +105,38 @@ For each day, provide:
   - activity: string
   - location: string
   - description: string
-  - estimated_cost: number
+  - estimated_cost: number (detailed breakdown)
   - transportation: string
   - duration: string
-  - tips: string[]
+  - tips: string[] (include budget-saving tips)
   - alternatives: array of objects with:
       - activity: string
       - location: string
       - description: string
       - estimated_cost: number
+      - budget_saving: string (explain how this saves money)
   - transportation_details: object with:
       - mode: string
       - duration: string
       - cost: number
-      - tips: string[]
+      - tips: string[] (include budget-saving options)
+  - dining_options: array of objects with:
+      - name: string
+      - cuisine: string
+      - price_range: string
+      - must_try: string[]
+      - location: string
+      - estimated_cost: number
+      - budget_tips: string[]
   - photo_spots: string[]
   - local_events: string[]
   - best_times: string[]
+  - budget_tips: string[]
+  - hidden_gems: string[] (include free/inexpensive options)
+  - cultural_info: string
+  - local_events: string[]
+  - safety_tips: string[]
+  - etiquette: string[]
 
 Return ONLY a valid JSON array of days, like this:
 [
@@ -123,7 +158,8 @@ Return ONLY a valid JSON array of days, like this:
             "activity": "Alt Activity",
             "location": "Alt Location",
             "description": "Alt Description",
-            "estimated_cost": 50
+            "estimated_cost": 50,
+            "budget_saving": "Saves ₱50 by using public transport"
           }
         ],
         "transportation_details": {
@@ -132,9 +168,25 @@ Return ONLY a valid JSON array of days, like this:
           "cost": 100,
           "tips": ["Tip A"]
         },
+        "dining_options": [
+          {
+            "name": "Sample Restaurant",
+            "cuisine": "Local",
+            "price_range": "₱₱",
+            "must_try": ["Dish 1"],
+            "location": "Sample Location",
+            "estimated_cost": 500,
+            "budget_tips": ["Lunch specials available"]
+          }
+        ],
         "photo_spots": ["Spot 1"],
         "local_events": ["Event 1"],
-        "best_times": ["Morning"]
+        "best_times": ["Morning"],
+        "budget_tips": ["Tip 1"],
+        "hidden_gems": ["Free spot 1"],
+        "cultural_info": "Info",
+        "safety_tips": ["Tip 1"],
+        "etiquette": ["Tip 1"]
       }
     ]
   }
@@ -150,9 +202,9 @@ For each day, provide:
    - Activity name
    - Location
    - Brief description
-   - Estimated cost (in PHP)
-   - Basic transportation information
-   - General tips`;
+   - Estimated cost (in PHP) with breakdown
+   - Basic transportation information and costs
+   - General tips including budget-saving options`;
 
   const prompt = `${basePrompt}
 ${isPremium ? premiumPrompt : standardPrompt}
@@ -167,8 +219,8 @@ Return ONLY a valid JSON array of days, where each day has:
       "activity": string,
       "location": string,
       "description": string,
-      "estimated_cost": number,
-      "transportation": string${isPremium ? `,
+      "estimated_cost": number${isPremium ? `,
+      "transportation": string,
       "duration": string,
       "tips": string[],
       "alternatives": [
@@ -176,7 +228,8 @@ Return ONLY a valid JSON array of days, where each day has:
           "activity": string,
           "location": string,
           "description": string,
-          "estimated_cost": number
+          "estimated_cost": number,
+          "budget_saving": string
         }
       ],
       "transportation_details": {
@@ -185,14 +238,35 @@ Return ONLY a valid JSON array of days, where each day has:
         "cost": number,
         "tips": string[]
       },
+      "dining_options": [
+        {
+          "name": string,
+          "cuisine": string,
+          "price_range": string,
+          "must_try": string[],
+          "location": string,
+          "estimated_cost": number,
+          "budget_tips": string[]
+        }
+      ],
       "photo_spots": string[],
       "local_events": string[],
-      "best_times": string[]` : ''}
+      "best_times": string[],
+      "budget_tips": string[],
+      "hidden_gems": string[],
+      "cultural_info": string,
+      "safety_tips": string[],
+      "etiquette": string[]` : ''}
     }
   ]
 }
 
-IMPORTANT: Return ONLY a valid JSON array. Do not include any markdown formatting, backticks, or additional text.`;
+IMPORTANT: 
+1. Return ONLY a valid JSON array
+2. Ensure all costs are realistic and within the budget
+3. Include detailed cost breakdowns for each activity
+4. Provide budget-saving alternatives where possible
+5. Do not include any markdown formatting, backticks, or additional text`;
 
   try {
     console.log('Sending prompt to Gemini:', prompt);

@@ -4,12 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Calendar, Clock, DollarSign, Car, Plane, ArrowLeft, Sparkles, ChevronLeft, ChevronRight, Utensils, Cloud, MessageSquare, Camera, Gem, PiggyBank, Shield, Heart, RefreshCw, Phone, Landmark, ChevronDown, ChevronUp, Info, Lightbulb, Wallet, Users } from 'lucide-react';
+import { MapPin, Calendar, Clock, DollarSign, Car, Plane, ArrowLeft, Sparkles, ChevronLeft, ChevronRight, Utensils, Cloud, MessageSquare, Camera, Gem, PiggyBank, Shield, Heart, RefreshCw, Phone, Landmark, ChevronDown, ChevronUp, Info, Lightbulb, Wallet, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import { generateItinerary } from '@/integrations/gemini/client';
 import type { ItineraryDay } from '@/integrations/gemini/client';
-import type { DatabaseItinerary } from '@/types/database';
+import type { DatabaseItinerary, Accommodation } from '@/types/database';
 import { parseItineraryData, stringifyItineraryData } from '@/types/database';
 import { ActivityEditor } from '@/components/ActivityEditor';
 import {
@@ -18,12 +18,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 type Itinerary = Omit<DatabaseItinerary, 'user_id' | 'updated_at'> & {
   itinerary_data: ItineraryDay[] | null;
+  accommodation?: Accommodation;
 };
 
-const PremiumFeatureSummary = ({ activity }: { activity: any }) => {
+const PremiumFeatureSummary = ({ activity, detailsOpen }: { activity: any, detailsOpen: boolean }) => {
   const features = [
     { icon: <Sparkles className="h-4 w-4" />, name: 'Pro Tips', count: activity.tips?.length || 0 },
     { icon: <RefreshCw className="h-4 w-4" />, name: 'Alternatives', count: activity.alternatives?.length || 0 },
@@ -68,22 +71,21 @@ const CollapsibleSection = ({
   title, 
   icon, 
   children, 
-  tooltip 
+  tooltip,
+  isOpen
 }: { 
   title: string; 
   icon: React.ReactNode; 
   children: React.ReactNode;
   tooltip: string;
+  isOpen: boolean;
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
     <div className="bg-[#0032A0]/5 p-4 rounded-lg">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <button
-              onClick={() => setIsOpen(!isOpen)}
               className="w-full flex items-center justify-between text-sm font-semibold text-[#0032A0]"
             >
               <div className="flex items-center gap-2">
@@ -91,7 +93,6 @@ const CollapsibleSection = ({
                 {title}
                 <Info className="h-3 w-3 text-[#0032A0]/50" />
               </div>
-              {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </button>
           </TooltipTrigger>
           <TooltipContent>
@@ -144,10 +145,11 @@ const ItineraryView = () => {
         });
         navigate('/dashboard');
       } else {
-        const { user_id, updated_at, itinerary_data, ...rest } = data as DatabaseItinerary;
+        const { user_id, updated_at, itinerary_data, accommodation, ...rest } = data as unknown as DatabaseItinerary;
         setItinerary({
           ...rest,
-          itinerary_data: parseItineraryData(itinerary_data)
+          itinerary_data: parseItineraryData(itinerary_data),
+          accommodation: accommodation ? JSON.parse(JSON.stringify(accommodation)) as Accommodation : undefined
         });
       }
     } catch (error) {
@@ -172,7 +174,8 @@ const ItineraryView = () => {
         itinerary.budget,
         itinerary.transportation,
         itinerary.interests,
-        isPremium
+        isPremium,
+        itinerary.accommodation
       );
 
       console.log('Generated Itinerary Data:', JSON.stringify(itineraryData, null, 2));
@@ -242,66 +245,149 @@ const ItineraryView = () => {
 
   const renderActivity = (activity: any, idx: number) => {
     const isPremium = user?.user_metadata?.subscription_tier === 'Premium';
+    const currentDayActivities = itinerary?.itinerary_data?.[currentDay - 1]?.activities || [];
+    const detailsOpen = openDetailsIdx === idx;
+
     return (
-      <div className={`p-4 rounded-xl bg-white shadow-sm mb-6`}> 
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">{activity.activity}</h3>
-            <p className="text-sm text-gray-600">{activity.time} • {activity.location}</p>
-            <p className="text-gray-700 mb-2">{activity.description}</p>
-            <div className="flex flex-wrap gap-2 mb-2 text-sm">
-              <div className="bg-gray-50 rounded px-3 py-1">Cost: ₱{activity.estimated_cost?.toLocaleString()}</div>
-              <div className="bg-gray-50 rounded px-3 py-1">Transportation: {activity.transportation}</div>
-            </div>
-          </div>
-          {isPremium && (
-            <button
-              className="mt-4 md:mt-0 md:ml-6 px-4 py-2 bg-[#0032A0] text-white rounded-lg text-sm font-medium hover:bg-[#002366] transition"
-              onClick={() => toggleDetails(idx)}
-            >
-              {openDetailsIdx === idx ? 'Hide Details' : 'View Details'}
-            </button>
-          )}
-        </div>
-        {isPremium && openDetailsIdx === idx && (
-          <div className="mt-6 border-t pt-4">
-            <div className="flex flex-wrap gap-1 text-xs mb-4 border-b border-gray-200 pb-2">
-              <PremiumFeatureSummary activity={activity} />
-            </div>
-            {activity.tips && activity.tips.length > 0 && (
-              <div className="mb-2">
-                <div className="flex items-center gap-2 text-[#0032A0] font-semibold mb-1"><Lightbulb className="w-4 h-4 text-yellow-500" />Pro Tips</div>
-                <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">{activity.tips.map((tip: string, i: number) => <li key={i}>{tip}</li>)}</ul>
-              </div>
-            )}
-            {activity.alternatives && activity.alternatives.length > 0 && (
-              <div className="mb-2">
-                <div className="flex items-center gap-2 text-[#0032A0] font-semibold mb-1"><RefreshCw className="w-4 h-4 text-blue-500" />Alternative Activities</div>
-                <div className="space-y-2">{activity.alternatives.map((alt: any, i: number) => (
-                  <div key={i} className="bg-gray-50 p-2 rounded"><p className="text-sm font-medium text-gray-900">{alt.activity}</p><p className="text-xs text-gray-600">{alt.location}</p><p className="text-xs text-gray-700 mt-1">{alt.description}</p><p className="text-xs text-gray-600 mt-1">Cost: ₱{alt.estimated_cost?.toLocaleString()}</p></div>
-                ))}</div>
-              </div>
-            )}
-            {activity.transportation_details && (
-              <div className="mb-2">
-                <div className="flex items-center gap-2 text-[#0032A0] font-semibold mb-1"><Car className="w-4 h-4 text-blue-500" />Transportation Details</div>
-                <div className="bg-gray-50 p-3 rounded"><p className="text-sm text-gray-700"><span className="font-medium">Mode:</span> {activity.transportation_details.mode}</p><p className="text-sm text-gray-700"><span className="font-medium">Duration:</span> {activity.transportation_details.duration}</p><p className="text-sm text-gray-700"><span className="font-medium">Cost:</span> ₱{activity.transportation_details.cost?.toLocaleString()}</p>{activity.transportation_details.tips && (<div className="mt-2"><p className="text-sm font-medium text-gray-700">Tips:</p><ul className="list-disc list-inside text-sm text-gray-600">{activity.transportation_details.tips.map((tip: string, i: number) => <li key={i}>{tip}</li>)}</ul></div>)}</div>
-              </div>
-            )}
-            {activity.alternatives && activity.alternatives.length > 0 && (
-              <div className="mb-2">
-                <div className="flex items-center gap-2 text-[#0032A0] font-semibold mb-1"><Camera className="w-4 h-4 text-purple-500" />Photo Spots</div>
-                <div className="bg-gray-50 p-3 rounded"><ul className="list-disc list-inside text-sm text-gray-700">{activity.photo_spots?.map((spot: string, i: number) => <li key={i}>{spot}</li>)}</ul></div>
-              </div>
-            )}
-            {activity.local_events && activity.local_events.length > 0 && (
-              <div className="mb-2">
-                <div className="flex items-center gap-2 text-[#0032A0] font-semibold mb-1"><Calendar className="w-4 h-4 text-blue-500" />Local Events</div>
-                <div className="bg-gray-50 p-3 rounded"><ul className="list-disc list-inside text-sm text-gray-700">{activity.local_events.map((event: string, i: number) => <li key={i}>{event}</li>)}</ul></div>
-              </div>
-            )}
-          </div>
+      <div className="relative">
+        {/* Timeline connector */}
+        {idx < currentDayActivities.length - 1 && (
+          <div className="absolute left-8 top-20 bottom-0 w-0.5 bg-[#0032A0]/20" />
         )}
+        <div className="flex gap-6">
+          {/* Time indicator */}
+          <div className="flex-shrink-0 w-16 text-center">
+            <div className="w-16 h-16 rounded-full bg-[#0032A0] text-white flex items-center justify-center font-semibold text-base p-2">
+              <span className="leading-tight">{activity.time}</span>
+            </div>
+          </div>
+          {/* Activity content */}
+          <div className="flex-grow">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+              <div className="p-6">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                  <div className="flex-grow">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{activity.activity}</h3>
+                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                      <MapPin className="h-4 w-4 text-[#0032A0]" />
+                      {activity.location}
+                    </div>
+                    <p className="text-gray-700 mb-4">{activity.description}</p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {activity.estimated_cost && (
+                        <div className="bg-[#0032A0]/5 rounded-lg px-3 py-1.5 text-sm font-medium text-[#0032A0] flex items-center gap-1.5">
+                          <DollarSign className="h-4 w-4" />
+                          ₱{activity.estimated_cost?.toLocaleString()}
+                        </div>
+                      )}
+                      {activity.transportation && (
+                        <div className="bg-[#BF0D3E]/5 rounded-lg px-3 py-1.5 text-sm font-medium text-[#BF0D3E] flex items-center gap-1.5">
+                          {getTransportationIcon(activity.transportation)}
+                          {activity.transportation}
+                        </div>
+                      )}
+                      {activity.duration && (
+                        <div className="bg-[#FED141]/5 rounded-lg px-3 py-1.5 text-sm font-medium text-[#FED141] flex items-center gap-1.5">
+                          <Clock className="h-4 w-4" />
+                          {activity.duration}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {isPremium && !detailsOpen && (
+                    <button
+                      onClick={() => toggleDetails(idx)}
+                      className="flex-shrink-0 px-4 py-2 bg-[#0032A0] text-white rounded-lg text-sm font-medium hover:bg-[#002366] transition flex items-center gap-2"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Show More Details
+                    </button>
+                  )}
+                </div>
+                {/* Premium Details Vertical Stack */}
+                {isPremium && detailsOpen && (
+                  <div className="mt-6 pt-6 border-t border-gray-100 space-y-4">
+                    {activity.tips && activity.tips.length > 0 && (
+                      <div className="bg-[#F5F8FF] rounded-lg p-4 border border-[#0032A0]/10">
+                        <div className="flex items-center gap-2 mb-2 text-[#0032A0] font-semibold text-base">
+                          <Lightbulb className="w-4 h-4 text-yellow-500" /> Pro Tips
+                        </div>
+                        <ul className="list-disc list-inside text-xs text-gray-700 space-y-1">
+                          {activity.tips.map((tip: string, i: number) => (
+                            <li key={i}>{tip}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {activity.transportation_details && (
+                      <div className="bg-[#F5F8FF] rounded-lg p-4 border border-[#0032A0]/10">
+                        <div className="flex items-center gap-2 mb-2 text-[#0032A0] font-semibold text-base">
+                          <Car className="w-4 h-4 text-blue-500" /> Transportation Details
+                        </div>
+                        <div className="text-xs text-gray-700">
+                          <div className="flex justify-between mb-1">
+                            <span>Mode</span>
+                            <span className="font-medium">{activity.transportation_details.mode}</span>
+                          </div>
+                          <div className="flex justify-between mb-1">
+                            <span>Duration</span>
+                            <span className="font-medium">{activity.transportation_details.duration}</span>
+                          </div>
+                          <div className="flex justify-between mb-1">
+                            <span>Cost</span>
+                            <span className="font-medium">₱{activity.transportation_details.cost?.toLocaleString()}</span>
+                          </div>
+                          {activity.transportation_details.tips && (
+                            <div className="mt-2">
+                              <span className="font-medium">Tips:</span>
+                              <ul className="list-disc list-inside text-xs text-gray-600">
+                                {activity.transportation_details.tips.map((tip: string, i: number) => (
+                                  <li key={i}>{tip}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {activity.photo_spots && activity.photo_spots.length > 0 && (
+                      <div className="bg-[#F5F8FF] rounded-lg p-4 border border-[#0032A0]/10">
+                        <div className="flex items-center gap-2 mb-2 text-[#0032A0] font-semibold text-base">
+                          <Camera className="w-4 h-4 text-purple-500" /> Photo Spots
+                        </div>
+                        <ul className="list-disc list-inside text-xs text-gray-700">
+                          {activity.photo_spots.map((spot: string, i: number) => (
+                            <li key={i}>{spot}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {activity.best_times && activity.best_times.length > 0 && (
+                      <div className="bg-[#F5F8FF] rounded-lg p-4 border border-[#0032A0]/10">
+                        <div className="flex items-center gap-2 mb-2 text-[#0032A0] font-semibold text-base">
+                          <Clock className="w-4 h-4 text-green-500" /> Best Times
+                        </div>
+                        <ul className="list-disc list-inside text-xs text-gray-700">
+                          {activity.best_times.map((time: string, i: number) => (
+                            <li key={i}>{time}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {/* Add more premium sections here as needed, following the same pattern */}
+                    <button
+                      onClick={() => toggleDetails(idx)}
+                      className="w-full mt-2 px-4 py-2 bg-[#0032A0] text-white rounded-lg text-sm font-medium hover:bg-[#002366] transition flex items-center justify-center gap-2"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                      Hide Details
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
@@ -311,6 +397,98 @@ const ItineraryView = () => {
       console.log('Current Itinerary Data:', JSON.stringify(itinerary.itinerary_data, null, 2));
     }
   }, [itinerary]);
+
+  const handleDownloadPDF = () => {
+    if (!itinerary) return;
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const contentWidth = pageWidth - (margin * 2);
+
+    // Add header with logo-like styling
+    doc.setFillColor(0, 50, 160); // #0032A0
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    
+    doc.setFontSize(24);
+    doc.setTextColor(255);
+    doc.text(itinerary.title, margin, 25);
+    
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255, 0.9);
+    doc.text(itinerary.destination, margin, 35);
+
+    // Add trip details in a modern card style
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(0, 50, 160);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, 50, contentWidth, 45, 3, 3, 'FD');
+    
+    doc.setFontSize(12);
+    doc.setTextColor(60);
+    doc.text(`Duration: ${itinerary.duration} days`, margin + 10, 65);
+    doc.text(`Budget: ₱${itinerary.budget?.toLocaleString()}`, margin + 10, 75);
+    doc.text(`Created: ${new Date(itinerary.created_at).toLocaleDateString()}`, margin + 10, 85);
+
+    let yPos = 105;
+
+    // Add each day's activities
+    itinerary.itinerary_data?.forEach((day, dayIndex) => {
+      // Check if we need a new page
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      // Day header with background
+      doc.setFillColor(0, 50, 160);
+      doc.rect(0, yPos - 10, pageWidth, 20, 'F');
+      
+      doc.setFontSize(16);
+      doc.setTextColor(255);
+      doc.text(`Day ${day.day}: ${day.title}`, margin, yPos);
+      yPos += 20;
+
+      // Activities table with improved styling
+      const tableData = day.activities.map(activity => [
+        activity.time,
+        activity.activity,
+        activity.location,
+        activity.description,
+        `₱${activity.estimated_cost?.toLocaleString() || '0'}`
+      ]);
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Time', 'Activity', 'Location', 'Description', 'Cost']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { 
+          fillColor: [0, 50, 160],
+          textColor: 255,
+          fontSize: 11,
+          fontStyle: 'bold'
+        },
+        styles: { 
+          fontSize: 10,
+          cellPadding: 5
+        },
+        columnStyles: {
+          0: { cellWidth: 25 },
+          1: { cellWidth: 40 },
+          2: { cellWidth: 40 },
+          3: { cellWidth: 'auto' },
+          4: { cellWidth: 30, halign: 'right' }
+        },
+        margin: { left: margin, right: margin }
+      });
+
+      yPos = (doc as any).lastAutoTable.finalY + 20;
+    });
+
+    // Save the PDF
+    doc.save(`${itinerary.title.toLowerCase().replace(/\s+/g, '-')}-itinerary.pdf`);
+  };
 
   if (loading) {
     return (
@@ -343,7 +521,7 @@ const ItineraryView = () => {
   const currentDayData = itinerary.itinerary_data?.[currentDay - 1];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <Navbar user={user} onSignOut={() => signOut().then(() => navigate('/'))} />
       
       <div className="container mx-auto px-4 py-8">
@@ -361,55 +539,89 @@ const ItineraryView = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <Card className="bg-white border border-gray-200 shadow-lg">
-              <CardHeader className="bg-[#0032A0] text-white rounded-t-lg">
-                <div className="flex items-center justify-between">
+            <Card className="bg-white border border-gray-200 shadow-lg sticky top-8">
+              <CardHeader className="bg-[#0032A0] text-white rounded-t-lg p-5">
+                <div className="flex items-start justify-between">
                   <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <MapPin className="h-5 w-5" />
+                    <CardTitle className="text-lg font-bold mb-1">
                       {itinerary.title}
                     </CardTitle>
-                    <CardDescription className="text-white/90 text-lg">
+                    <CardDescription className="text-white/90 text-base">
                       {itinerary.destination}
                     </CardDescription>
                   </div>
-                  {user?.user_metadata?.subscription_tier === 'Premium' ? (
-                    <div className="bg-[#FED141] text-[#0032A0] px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
-                      <Sparkles className="h-4 w-4" />
-                      Premium
-                    </div>
-                  ) : (
-                    <div className="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-sm font-semibold">
-                      Free
+                  {user?.user_metadata?.subscription_tier === 'Premium' && (
+                    <div className="flex items-center gap-1 px-2 py-1 bg-white/10 backdrop-blur-sm rounded border border-white/20">
+                      <Sparkles className="h-3 w-3 text-[#FED141]" />
+                      <span className="text-xs font-medium text-white">Premium</span>
                     </div>
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="p-6 space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Clock className="h-4 w-4 text-[#0032A0]" />
-                    {itinerary.duration} days
+              <CardContent className="p-5 space-y-3">
+                {/* Trip Overview */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-gray-50 p-2 rounded">
+                    <div className="flex items-center gap-1 text-xs text-gray-600 mb-0.5">
+                      <Clock className="h-3 w-3 text-[#0032A0]" />
+                      Duration
+                    </div>
+                    <div className="font-semibold text-gray-900 text-sm">
+                      {itinerary.duration} days
+                    </div>
                   </div>
                   {itinerary.budget && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <DollarSign className="h-4 w-4 text-[#BF0D3E]" />
-                      Budget: ₱{itinerary.budget.toLocaleString()}
+                    <div className="bg-gray-50 p-2 rounded">
+                      <div className="flex items-center gap-1 text-xs text-gray-600 mb-0.5">
+                        <DollarSign className="h-3 w-3 text-[#BF0D3E]" />
+                        Budget
+                      </div>
+                      <div className="font-semibold text-gray-900 text-sm">
+                        ₱{itinerary.budget.toLocaleString()}
+                      </div>
                     </div>
                   )}
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Calendar className="h-4 w-4 text-[#FED141]" />
-                    Created {new Date(itinerary.created_at).toLocaleDateString()}
+                </div>
+                {/* Accommodation Section */}
+                <div className="bg-gray-50 p-2 rounded">
+                  <h4 className="font-semibold mb-1 text-gray-900 flex items-center gap-1 text-sm">
+                    <Landmark className="h-3 w-3 text-[#0032A0]" />
+                    Accommodation
+                  </h4>
+                  <div className="space-y-1">
+                    {itinerary.accommodation ? (
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm">{itinerary.accommodation.name}</p>
+                        <p className="text-xs text-gray-600">{itinerary.accommodation.location}</p>
+                        {itinerary.accommodation.check_in && (
+                          <p className="text-xs text-gray-600 mt-0.5">
+                            Check-in: {itinerary.accommodation.check_in}
+                          </p>
+                        )}
+                        {itinerary.accommodation.check_out && (
+                          <p className="text-xs text-gray-600">
+                            Check-out: {itinerary.accommodation.check_out}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-600">
+                        No accommodation details provided
+                      </div>
+                    )}
                   </div>
                 </div>
-                
-                <div>
-                  <h4 className="font-semibold mb-2 text-gray-900">Transportation</h4>
-                  <div className="flex flex-wrap gap-2">
+                {/* Transportation Section */}
+                <div className="bg-gray-50 p-2 rounded">
+                  <h4 className="font-semibold mb-1 text-gray-900 flex items-center gap-1 text-sm">
+                    <Car className="h-3 w-3 text-[#0032A0]" />
+                    Transportation
+                  </h4>
+                  <div className="flex flex-wrap gap-1">
                     {itinerary.transportation.map((transport, index) => (
                       <span
                         key={index}
-                        className="flex items-center gap-1 px-3 py-1 bg-[#0032A0]/10 text-[#0032A0] text-xs rounded-full font-medium"
+                        className="flex items-center gap-1 px-2 py-0.5 bg-[#0032A0]/10 text-[#0032A0] text-xs rounded font-medium"
                       >
                         {getTransportationIcon(transport)}
                         {transport}
@@ -417,40 +629,54 @@ const ItineraryView = () => {
                     ))}
                   </div>
                 </div>
-
-                <div>
-                  <h4 className="font-semibold mb-2 text-gray-900">Interests</h4>
-                  <div className="flex flex-wrap gap-2">
+                {/* Interests Section */}
+                <div className="bg-gray-50 p-2 rounded">
+                  <h4 className="font-semibold mb-1 text-gray-900 flex items-center gap-1 text-sm">
+                    <Heart className="h-3 w-3 text-[#0032A0]" />
+                    Interests
+                  </h4>
+                  <div className="flex flex-wrap gap-1">
                     {itinerary.interests.map((interest, index) => (
                       <span
                         key={index}
-                        className="px-3 py-1 bg-[#BF0D3E]/10 text-[#BF0D3E] text-xs rounded-full font-medium"
+                        className="px-2 py-0.5 bg-[#BF0D3E]/10 text-[#BF0D3E] text-xs rounded font-medium"
                       >
                         {interest}
                       </span>
                     ))}
                   </div>
                 </div>
-
-                {!itinerary.itinerary_data && (
-                  <Button 
-                    onClick={generateAIItinerary}
-                    disabled={generatingAI}
-                    className="w-full bg-[#0032A0] hover:bg-[#0032A0]/90 text-white"
-                  >
-                    {generatingAI ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Generate AI Itinerary
-                      </>
-                    )}
-                  </Button>
-                )}
+                {/* Action Buttons */}
+                <div className="space-y-2">
+                  {itinerary.itinerary_data && (
+                    <Button 
+                      onClick={handleDownloadPDF}
+                      className="w-full bg-[#0032A0] hover:bg-[#0032A0]/90 text-white flex items-center justify-center gap-2 h-10 text-sm"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download PDF
+                    </Button>
+                  )}
+                  {!itinerary.itinerary_data && (
+                    <Button 
+                      onClick={generateAIItinerary}
+                      disabled={generatingAI}
+                      className="w-full bg-[#0032A0] hover:bg-[#0032A0]/90 text-white h-10 text-sm"
+                    >
+                      {generatingAI ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Generate AI Itinerary
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -472,57 +698,69 @@ const ItineraryView = () => {
             ) : (
               <div className="space-y-6">
                 {/* Day Navigation */}
-                <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-4 shadow-lg">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setCurrentDay(prev => Math.max(1, prev - 1))}
-                    disabled={currentDay === 1}
-                    className="hover:text-[#BF0D3E]"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </Button>
-                  <div className="text-center">
-                    <div className="text-sm text-[#0032A0] font-medium mb-1">Day {currentDay}</div>
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      {currentDayData.title}
-                    </h2>
+                <div className="bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                  {/* Day Navigation Tabs */}
+                  <div className="flex items-center border-b border-gray-200">
+                    {Array.from({ length: itinerary.duration }, (_, i) => i + 1).map((day) => (
+                      <button
+                        key={day}
+                        onClick={() => setCurrentDay(day)}
+                        className={`flex-1 px-4 py-3 text-sm font-medium transition-colors relative ${
+                          currentDay === day
+                            ? 'text-[#0032A0]'
+                            : 'text-gray-600 hover:text-[#0032A0] hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className="flex items-center justify-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          Day {day}
+                        </span>
+                        {currentDay === day && (
+                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0032A0]" />
+                        )}
+                      </button>
+                    ))}
                   </div>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setCurrentDay(prev => Math.min(itinerary.duration, prev + 1))}
-                    disabled={currentDay === itinerary.duration}
-                    className="hover:text-[#BF0D3E]"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </Button>
+
+                  {/* Current Day Header */}
+                  <div className="p-6 bg-gray-50 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm text-[#0032A0] font-medium mb-1">Day {currentDay}</div>
+                        <h2 className="text-2xl font-bold text-gray-900">
+                          {currentDayData.title}
+                        </h2>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCurrentDay(prev => Math.max(1, prev - 1))}
+                          disabled={currentDay === 1}
+                          className="hover:text-[#BF0D3E]"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCurrentDay(prev => Math.min(itinerary.duration, prev + 1))}
+                          disabled={currentDay === itinerary.duration}
+                          className="hover:text-[#BF0D3E]"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Activities Timeline */}
-                <div className="space-y-4">
-                  {currentDayData.activities.map((activity, index) => (
+                <div className="space-y-8">
+                  {itinerary.itinerary_data?.[currentDay - 1]?.activities.map((activity, index) => (
                     renderActivity(activity, index)
                   ))}
                 </div>
-
-                {itinerary.itinerary_data && user?.user_metadata?.subscription_tier === 'Premium' && (
-                  <Button 
-                    onClick={generateAIItinerary}
-                    disabled={generatingAI}
-                    className="w-full bg-[#0032A0] hover:bg-[#0032A0]/90 text-white mt-4"
-                  >
-                    {generatingAI ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Regenerating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Regenerate with Premium Features
-                      </>
-                    )}
-                  </Button>
-                )}
               </div>
             )}
           </div>
