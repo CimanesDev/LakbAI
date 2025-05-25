@@ -16,7 +16,7 @@ export interface DatabaseItinerary {
   budget: number;
   transportation: string[];
   interests: string[];
-  accommodation?: Accommodation;
+  accommodation: Accommodation | null;
   itinerary_data: Json;
   created_at: string;
   updated_at: string;

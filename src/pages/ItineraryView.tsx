@@ -149,7 +149,7 @@ const ItineraryView = () => {
         setItinerary({
           ...rest,
           itinerary_data: parseItineraryData(itinerary_data),
-          accommodation: accommodation ? JSON.parse(JSON.stringify(accommodation)) as Accommodation : undefined
+          accommodation: accommodation as Accommodation | undefined
         });
       }
     } catch (error) {

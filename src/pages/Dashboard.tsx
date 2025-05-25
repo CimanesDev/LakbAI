@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, MapPin, Calendar, Clock, DollarSign, Plane, ArrowRight, Trash2, AlertCircle, Search, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, MapPin, Calendar, Clock, DollarSign, Plane, ArrowRight, Trash2, AlertCircle, Search, Filter, ChevronDown, ChevronUp, Heart, Sparkles, Crown, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import { Input } from "@/components/ui/input";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { motion } from 'framer-motion';
+import SEO from '@/components/SEO';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +27,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { Chatbot } from '@/components/Chatbot';
+
+type SortOption = 'newest' | 'oldest' | 'budget-high' | 'budget-low' | 'duration-long' | 'duration-short';
 
 interface Itinerary {
   id: string;
@@ -36,8 +41,6 @@ interface Itinerary {
   interests: string[];
   created_at: string;
 }
-
-type SortOption = 'newest' | 'oldest' | 'budget-high' | 'budget-low' | 'duration-long' | 'duration-short';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -53,6 +56,8 @@ const Dashboard = () => {
   const [selectedTransportation, setSelectedTransportation] = useState<string[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const isPremium = user?.user_metadata?.subscription_tier === 'Premium';
 
   useEffect(() => {
     if (user) {
@@ -194,12 +199,11 @@ const Dashboard = () => {
     }
   };
 
-  // Calculate total budget and remaining budget
+  // Calculate total budget and average duration
   const totalBudget = itineraries.reduce((sum, it) => sum + (it.budget || 0), 0);
-  const totalSpent = itineraries.reduce((sum, it) => {
-    return sum + ((it.budget || 0) * 0.3);
-  }, 0);
-  const remainingBudget = totalBudget - totalSpent;
+  const averageDuration = itineraries.length > 0 
+    ? Math.round(itineraries.reduce((sum, it) => sum + it.duration, 0) / itineraries.length)
+    : 0;
 
   // Get unique interests and transportation options for filters
   const allInterests = Array.from(new Set(itineraries.flatMap(it => it.interests)));
@@ -223,110 +227,210 @@ const Dashboard = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50">
+        <Navbar user={user} onSignOut={() => signOut().then(() => navigate('/'))} />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#0032A0] mx-auto"></div>
+            <p className="mt-4 text-[#0032A0] font-medium">Loading your adventures...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 relative">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50">
+      <SEO
+        title="Dashboard"
+        description="Plan, organize, and relive your Philippine journeys with LakbAI. View your travel itineraries, track your budget, and discover new destinations."
+        keywords="Philippine travel dashboard, travel planning, itinerary management, trip tracking, budget management"
+      />
+
       <AnimatedBackground />
+      <Navbar user={user} onSignOut={() => signOut().then(() => navigate('/'))} />
       
-      <Navbar user={user} onSignOut={handleSignOut} />
-      
-      <div className="container mx-auto px-4 py-8 relative z-10">
-        {/* Welcome Section */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-xl font-semibold text-[#0032A0]">
-                Welcome back, {user?.user_metadata?.full_name || 'Traveler'} 👋
-              </h1>
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 bg-[#0032A0]/10 text-[#0032A0] text-sm rounded-full font-medium">
-                  {user?.user_metadata?.subscription_tier || 'Free'} Tier
-                </span>
-                {(!user?.user_metadata?.subscription_tier || user?.user_metadata?.subscription_tier === 'Free') && (
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    className="border-[#0032A0] text-[#0032A0] hover:bg-[#0032A0] hover:text-white transition-colors"
-                    onClick={() => navigate('/pricing')}
-                  >
-                    Upgrade to Premium
-                  </Button>
-                )}
+      <main className="container mx-auto px-4 py-8 relative z-10">
+        {/* Header Section with Premium Indicator */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12"
+        >
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <h1 className="text-4xl font-bold text-[#0032A0]">Your Travel Adventures</h1>
+            {isPremium ? (
+              <div className="flex items-center gap-2 px-3 py-1 bg-[#FED141] rounded-full" aria-label="Premium User Badge">
+                <Crown className="h-5 w-5 text-[#0032A0]" />
+                <span className="text-[#0032A0] font-medium">Premium</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-1 bg-[#0032A0]/10 rounded-full" aria-label="Free User Badge">
+                <span className="text-[#0032A0] font-medium">Free</span>
+              </div>
+            )}
+          </div>
+          <p className="text-lg text-[#0032A0]/80">Plan, organize, and relive your Philippine journeys</p>
+          {!isPremium && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="mt-4"
+            >
+              <Button
+                onClick={() => navigate('/#pricing')}
+                className="bg-[#FED141] hover:bg-[#FED141]/90 text-[#0032A0] font-medium"
+                aria-label="Upgrade to Premium"
+              >
+                <Crown className="h-4 w-4 mr-2" />
+                Upgrade to Premium
+              </Button>
+            </motion.div>
+          )}
+        </motion.div>
+
+        {/* Stats Cards */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+        >
+          <Card className="bg-white/80 backdrop-blur-sm border-[#0032A0]/20 hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-[#0032A0]/10 rounded-full">
+                  <Plane className="h-6 w-6 text-[#0032A0]" />
+                </div>
+                <div>
+                  <p className="text-sm text-[#0032A0]/60">Total Trips</p>
+                  <p className="text-2xl font-bold text-[#0032A0]">{itineraries.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/80 backdrop-blur-sm border-[#0032A0]/20 hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-[#BF0D3E]/10 rounded-full">
+                  <DollarSign className="h-6 w-6 text-[#BF0D3E]" />
+                </div>
+                <div>
+                  <p className="text-sm text-[#0032A0]/60">Total Budget</p>
+                  <p className="text-2xl font-bold text-[#0032A0]">₱{totalBudget.toLocaleString()}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/80 backdrop-blur-sm border-[#0032A0]/20 hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-[#FED141]/10 rounded-full">
+                  <Clock className="h-6 w-6 text-[#FED141]" />
+                </div>
+                <div>
+                  <p className="text-sm text-[#0032A0]/60">Avg. Trip Duration</p>
+                  <p className="text-2xl font-bold text-[#0032A0]">{averageDuration} days</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Search and Filter Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="mb-8"
+        >
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex-1 w-full md:w-auto">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#0032A0]/40" />
+                <Input
+                  placeholder="Search trips..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-white/80 backdrop-blur-sm border-[#0032A0]/20 focus:border-[#0032A0] w-full"
+                />
               </div>
             </div>
-            <p className="text-sm text-[#0032A0]/70">
-              Manage your travel itineraries and plan your next adventure
-            </p>
-          </div>
-          <Button 
-            onClick={() => navigate('/planning')} 
-            className="bg-[#0032A0] hover:bg-[#0032A0]/90 text-white px-6 py-2 text-sm shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Plan New Trip
-          </Button>
-        </div>
 
-        {/* Search and Filters */}
-        <div className="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="flex gap-4 w-full md:w-auto">
-            <div className="relative flex-1 md:flex-none">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#0032A0]/50" />
-              <Input
-                placeholder="Search trips..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-full md:w-[300px] border-[#0032A0]/20 focus:border-[#0032A0]"
-              />
+            <div className="flex gap-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="bg-white/80 backdrop-blur-sm border-[#0032A0]/20 hover:bg-[#0032A0]/10 text-[#0032A0]"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Filters
+                {showFilters ? <ChevronUp className="h-4 w-4 ml-2" /> : <ChevronDown className="h-4 w-4 ml-2" />}
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="bg-white/80 backdrop-blur-sm border-[#0032A0]/20 hover:bg-[#0032A0]/10 text-[#0032A0]"
+                  >
+                    Sort by
+                    <ChevronDown className="h-4 w-4 ml-2" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => setSortBy('newest')}>Newest First</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('oldest')}>Oldest First</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('budget-high')}>Highest Budget</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('budget-low')}>Lowest Budget</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('duration-long')}>Longest Duration</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('duration-short')}>Shortest Duration</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Button
+                onClick={() => navigate('/plan')}
+                className="bg-[#0032A0] hover:bg-[#0032A0]/90 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Trip
+              </Button>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 border-[#0032A0]/20 text-[#0032A0] hover:bg-[#0032A0]/10">
-                  Sort by
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setSortBy('newest')}>Newest First</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('oldest')}>Oldest First</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('budget-high')}>Highest Budget</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('budget-low')}>Lowest Budget</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('duration-long')}>Longest Duration</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('duration-short')}>Shortest Duration</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="gap-2 border-[#0032A0]/20 text-[#0032A0] hover:bg-[#0032A0]/10"
-            >
-              <Filter className="h-4 w-4" />
-              Filters
-              {showFilters ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
           </div>
-        </div>
 
-        {/* Filters */}
-        {showFilters && (
-          <Card className="max-w-7xl mx-auto mb-8 bg-white border border-[#0032A0]/20 shadow-xl">
-            <CardContent className="p-6">
-              <div className="space-y-6">
+          {/* Filter Options */}
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-4 p-4 bg-white/80 backdrop-blur-sm rounded-lg border border-[#0032A0]/20"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <h3 className="font-semibold mb-3 text-[#0032A0]">Interests</h3>
+                  <h3 className="text-sm font-medium text-[#0032A0] mb-2">Interests</h3>
                   <div className="flex flex-wrap gap-2">
                     {allInterests.map((interest) => (
                       <Button
                         key={interest}
                         variant={selectedInterests.includes(interest) ? "default" : "outline"}
                         size="sm"
-                        onClick={() => setSelectedInterests(prev =>
-                          prev.includes(interest)
-                            ? prev.filter(i => i !== interest)
-                            : [...prev, interest]
-                        )}
+                        onClick={() => {
+                          setSelectedInterests(prev =>
+                            prev.includes(interest)
+                              ? prev.filter(i => i !== interest)
+                              : [...prev, interest]
+                          );
+                        }}
                         className={selectedInterests.includes(interest)
                           ? 'bg-[#0032A0] text-white'
-                          : 'hover:bg-[#0032A0]/10 text-[#0032A0] border-[#0032A0]'
+                          : 'bg-white/80 backdrop-blur-sm border-[#0032A0]/20 hover:bg-[#0032A0]/10 text-[#0032A0]'
                         }
                       >
                         {interest}
@@ -335,21 +439,23 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-3 text-[#0032A0]">Transportation</h3>
+                  <h3 className="text-sm font-medium text-[#0032A0] mb-2">Transportation</h3>
                   <div className="flex flex-wrap gap-2">
                     {allTransportation.map((transport) => (
                       <Button
                         key={transport}
                         variant={selectedTransportation.includes(transport) ? "default" : "outline"}
                         size="sm"
-                        onClick={() => setSelectedTransportation(prev =>
-                          prev.includes(transport)
-                            ? prev.filter(t => t !== transport)
-                            : [...prev, transport]
-                        )}
+                        onClick={() => {
+                          setSelectedTransportation(prev =>
+                            prev.includes(transport)
+                              ? prev.filter(t => t !== transport)
+                              : [...prev, transport]
+                          );
+                        }}
                         className={selectedTransportation.includes(transport)
                           ? 'bg-[#0032A0] text-white'
-                          : 'hover:bg-[#0032A0]/10 text-[#0032A0] border-[#0032A0]'
+                          : 'bg-white/80 backdrop-blur-sm border-[#0032A0]/20 hover:bg-[#0032A0]/10 text-[#0032A0]'
                         }
                       >
                         {transport}
@@ -358,180 +464,184 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </motion.div>
+          )}
 
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#0032A0] mx-auto"></div>
-            <p className="mt-4 text-[#0032A0]/70">Loading your trips...</p>
-          </div>
-        ) : filteredItineraries.length === 0 ? (
-          <Card className="max-w-2xl mx-auto text-center py-12 bg-white border border-[#0032A0]/20 shadow-xl">
-            <CardContent>
-              <div className="p-4 bg-[#0032A0] rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-                <Plane className="h-10 w-10 text-white" />
+          {/* Premium Feature Lock */}
+          {!isPremium && itineraries.length >= 3 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              className="mt-4 p-4 bg-white/80 backdrop-blur-sm rounded-lg border border-[#0032A0]/20"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Lock className="h-5 w-5 text-[#0032A0]" />
+                  <div>
+                    <h3 className="text-[#0032A0] font-medium">Free Plan Limit Reached</h3>
+                    <p className="text-sm text-[#0032A0]/70">Upgrade to Premium to create unlimited trips</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => navigate('/pricing')}
+                  className="bg-[#FED141] hover:bg-[#FED141]/90 text-[#0032A0] font-medium"
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  Upgrade Now
+                </Button>
               </div>
-              <h3 className="text-2xl font-semibold text-[#0032A0] mb-3">
-                {itineraries.length === 0 ? "No trips yet" : "No trips match your filters"}
-              </h3>
-              <p className="text-[#0032A0]/70 mb-8 text-lg">
-                {itineraries.length === 0 
-                  ? "Start planning your first adventure with LakbAI"
-                  : "Try adjusting your search or filters"}
-              </p>
-              <Button 
-                onClick={() => navigate('/planning')}
-                className="bg-[#0032A0] hover:bg-[#0032A0]/90 text-white px-8 py-6 text-lg"
+            </motion.div>
+          )}
+        </motion.div>
+
+        {/* Trip Cards Grid */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {filteredItineraries.map((itinerary, index) => (
+            <motion.div
+              key={itinerary.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+            >
+              <Card 
+                className="group hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer bg-white/80 backdrop-blur-sm border-[#0032A0]/20"
+                onClick={() => navigate(`/itinerary/${itinerary.id}`)}
               >
-                Plan Your First Trip
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              {/* Budget Tracker */}
-              <Card className="lg:col-span-1 bg-white border border-[#0032A0]/20 shadow-xl h-fit">
-                <CardHeader className="bg-[#0032A0] text-white rounded-t-lg py-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <DollarSign className="h-4 w-4" />
-                        Budget Overview
-                      </CardTitle>
-                      <CardDescription className="text-white/90 text-sm">
-                        Track your travel expenses
-                      </CardDescription>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold">₱{totalBudget.toLocaleString()}</p>
-                      <p className="text-sm text-white/90">Total Budget</p>
-                    </div>
-                  </div>
+                <CardHeader className="bg-[#0032A0] text-white rounded-t-lg">
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    {itinerary.title}
+                  </CardTitle>
+                  <CardDescription className="text-white/90 text-lg">
+                    {itinerary.destination}
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-[#BF0D3E]/5 rounded-lg">
-                      <h3 className="text-sm font-medium text-[#0032A0] mb-1">Spent</h3>
-                      <p className="text-xl font-bold text-[#BF0D3E]">₱{totalSpent.toLocaleString()}</p>
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm text-[#0032A0]/70">
+                      <Clock className="h-4 w-4 text-[#0032A0]" />
+                      {itinerary.duration} days
                     </div>
-                    <div className="text-center p-3 bg-[#FED141]/5 rounded-lg">
-                      <h3 className="text-sm font-medium text-[#0032A0] mb-1">Remaining</h3>
-                      <p className="text-xl font-bold text-[#FED141]">₱{remainingBudget.toLocaleString()}</p>
+                    {itinerary.budget && (
+                      <div className="flex items-center gap-2 text-sm text-[#0032A0]/70">
+                        <DollarSign className="h-4 w-4 text-[#BF0D3E]" />
+                        ₱{itinerary.budget.toLocaleString()}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-sm text-[#0032A0]/70">
+                      <Calendar className="h-4 w-4 text-[#FED141]" />
+                      Created {formatDate(itinerary.created_at)}
                     </div>
                   </div>
-                  <div className="mt-3 h-2 bg-[#0032A0]/10 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-[#0032A0] transition-all duration-500"
-                      style={{ width: `${(totalSpent / totalBudget) * 100}%` }}
-                    />
+                  
+                  <div className="mt-4">
+                    <div className="flex flex-wrap gap-2">
+                      {itinerary.interests.slice(0, 3).map((interest, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-[#BF0D3E]/10 text-[#BF0D3E] text-xs rounded-full font-medium"
+                        >
+                          {interest}
+                        </span>
+                      ))}
+                      {itinerary.interests.length > 3 && (
+                        <span className="px-3 py-1 bg-[#0032A0]/10 text-[#0032A0] text-xs rounded-full font-medium">
+                          +{itinerary.interests.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex justify-between items-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-[#0032A0] hover:text-[#0032A0]/80 hover:bg-[#0032A0]/10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/itinerary/${itinerary.id}`);
+                      }}
+                    >
+                      View Details
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-[#BF0D3E] hover:text-[#BF0D3E]/80 hover:bg-[#BF0D3E]/10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(e, itinerary.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
+            </motion.div>
+          ))}
+        </motion.div>
 
-              {/* Trips Grid */}
-              <div className="lg:col-span-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {filteredItineraries.map((itinerary) => (
-                    <Card 
-                      key={itinerary.id} 
-                      className="group hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer bg-white border border-[#0032A0]/20"
-                      onClick={() => navigate(`/itinerary/${itinerary.id}`)}
-                    >
-                      <CardHeader className="bg-[#0032A0] text-white rounded-t-lg">
-                        <CardTitle className="flex items-center gap-2">
-                          <MapPin className="h-5 w-5" />
-                          {itinerary.title}
-                        </CardTitle>
-                        <CardDescription className="text-white/90 text-lg">
-                          {itinerary.destination}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="p-6">
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-2 text-sm text-[#0032A0]/70">
-                            <Clock className="h-4 w-4 text-[#0032A0]" />
-                            {itinerary.duration} days
-                          </div>
-                          {itinerary.budget && (
-                            <div className="flex items-center gap-2 text-sm text-[#0032A0]/70">
-                              <DollarSign className="h-4 w-4 text-[#BF0D3E]" />
-                              ₱{itinerary.budget.toLocaleString()}
-                            </div>
-                          )}
-                          <div className="flex items-center gap-2 text-sm text-[#0032A0]/70">
-                            <Calendar className="h-4 w-4 text-[#FED141]" />
-                            Created {formatDate(itinerary.created_at)}
-                          </div>
-                        </div>
-                        
-                        <div className="mt-4">
-                          <div className="flex flex-wrap gap-2">
-                            {itinerary.interests.slice(0, 3).map((interest, index) => (
-                              <span
-                                key={index}
-                                className="px-3 py-1 bg-[#BF0D3E]/10 text-[#BF0D3E] text-xs rounded-full font-medium"
-                              >
-                                {interest}
-                              </span>
-                            ))}
-                            {itinerary.interests.length > 3 && (
-                              <span className="px-3 py-1 bg-[#0032A0]/10 text-[#0032A0] text-xs rounded-full font-medium">
-                                +{itinerary.interests.length - 3} more
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="mt-6 flex justify-between items-center">
-                          <Button 
-                            variant="ghost" 
-                            className="group-hover:text-[#0032A0] transition-colors"
-                          >
-                            View Details
-                            <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-[#BF0D3E] hover:text-[#BF0D3E] hover:bg-[#BF0D3E]/10"
-                            onClick={(e) => handleDeleteClick(e, itinerary.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
+        {/* Empty State */}
+        {filteredItineraries.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center py-12"
+          >
+            <div className="p-4 bg-[#0032A0] rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+              <Sparkles className="h-10 w-10 text-white" />
             </div>
-          </div>
+            <h3 className="text-2xl font-semibold text-[#0032A0] mb-3">No Trips Found</h3>
+            <p className="text-[#0032A0]/80 mb-8">
+              {searchQuery || selectedInterests.length > 0 || selectedTransportation.length > 0
+                ? "Try adjusting your filters or search terms"
+                : "Start planning your next adventure!"}
+            </p>
+            <Button
+              onClick={() => navigate('/planning')}
+              className="bg-[#0032A0] hover:bg-[#0032A0]/90 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Start Planning
+            </Button>
+          </motion.div>
         )}
+      </main>
 
-        {/* Delete Confirmation Dialog */}
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-[#0032A0]">Delete Trip</AlertDialogTitle>
-              <AlertDialogDescription className="text-[#0032A0]/70">
-                Are you sure you want to delete this trip? This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="border-[#0032A0]/20 text-[#0032A0] hover:bg-[#0032A0]/10">Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteConfirm}
-                className="bg-[#BF0D3E] hover:bg-[#BF0D3E]/90 text-white"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+      {/* Add Chatbot */}
+      <Chatbot itineraries={itineraries} />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="bg-white/95 backdrop-blur-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-[#0032A0]">Delete Trip</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this trip? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-white/80 backdrop-blur-sm border-[#0032A0]/20 hover:bg-[#0032A0]/10 text-[#0032A0]">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-[#BF0D3E] hover:bg-[#BF0D3E]/90 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

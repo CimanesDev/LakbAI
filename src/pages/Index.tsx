@@ -83,25 +83,34 @@ const Index = () => {
             </div>
 
             {/* Right Column - Images */}
-            <div className="relative w-full h-[340px] md:h-[420px] lg:h-[500px] hidden md:flex items-center justify-center">
-              <img
+            <div className="relative w-full h-[340px] md:h-[420px] lg:h-[500px] hidden lg:flex items-center justify-center">
+              <motion.img
+                initial={{ opacity: 0, y: 100 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
                 src="/images/5.png"
                 alt="Background Layer"
-                className="hidden md:block absolute left-[40%] top-[25%] w-[380px] md:w-[500px] lg:w-[800px] -translate-x-1/4 -translate-y-1/2 z-10 opacity-100 drop-shadow-2xl select-none pointer-events-none"
+                className="absolute left-[20%] bottom-[45%] w-[380px] md:w-[500px] lg:w-[800px] -translate-x-1/4 -translate-y-1/2 z-10 opacity-100 drop-shadow-2xl select-none pointer-events-none"
                 aria-hidden="true"
               />
             
-              <img
+              <motion.img
+                initial={{ opacity: 0, y: 100 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.1 }}
                 src="/images/4.png"
                 alt="Middle Layer"
-                className="hidden md:block absolute left-[95%] top-[65%] w-56 md:w-80 lg:w-[500px] -translate-x-1/2 -translate-y-1/2 z-15 opacity-100 drop-shadow-2xl select-none pointer-events-none"
+                className="absolute left-[50%] top-[20%] w-56 md:w-80 lg:w-[500px] -translate-x-1/2 -translate-y-1/2 z-15 opacity-100 drop-shadow-2xl select-none pointer-events-none"
                 aria-hidden="true"
               />
           
-              <img
+              <motion.img
+                initial={{ opacity: 0, y: 100 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
                 src="/images/3.png"
                 alt="Top Layer"
-                className="hidden md:block absolute left-[40%] -bottom-[20%] w-40 md:w-56 lg:w-[480px] -translate-x-[65%] -translate-y-1/8 z-20 drop-shadow-2xl select-none pointer-events-none"
+                className="absolute -left-[15%] -bottom-[20%] w-40 md:w-56 lg:w-[500px] -translate-y-1/8 z-20 drop-shadow-2xl select-none pointer-events-none"
                 aria-hidden="true"
               />
             </div>
@@ -170,43 +179,47 @@ const Index = () => {
             Choose what fits your budget. All plans are high-quality and worth every penny!
           </p>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 max-w-4xl mx-auto px-4 md:px-0">
-          <PricingCard
-            title="Basic Plan"
-            price="FREE"
-            description="Perfect for first-time users"
-            features={[
-              "1 Itinerary per day",
-              "3 max trips on dashboard",
-              "Basic recommendations",
-              "Standard destinations",
-              "Email support"
-            ]}
-            buttonText="Try Now"
-            popular={false}
-          />
-          <div className="relative">
-            <div className="absolute -top-3 md:-top-4 left-1/2 transform -translate-x-1/2 z-10 w-full max-w-[200px]">
-              <div className="bg-[#FED141] text-[#0032A0] px-4 md:px-6 py-1 md:py-2 rounded-full text-xs md:text-sm font-bold flex items-center justify-center shadow-lg">
-                <Sparkles className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-                Most Sulit! 🔥
-              </div>
+        <div className="flex flex-col md:flex-row gap-8 max-w-4xl mx-auto px-4 md:px-0 items-stretch">
+          {/* Basic Plan Card */}
+          <div className="flex-1 bg-white border border-[#0032A0]/20 rounded-2xl shadow p-8 flex flex-col items-center justify-between hover:shadow-lg transition-all duration-300">
+            <div className="w-full">
+              <h3 className="text-2xl font-bold text-[#0032A0] mb-2 text-center">Basic Plan</h3>
+              <div className="text-4xl font-extrabold text-[#0032A0] text-center mb-1">FREE</div>
+              <div className="text-center text-[#0032A0]/70 mb-4">Perfect for first-time users</div>
+              <ul className="mb-8 space-y-2 text-[#0032A0] text-sm">
+                <li>✔ 3 AI generations per day</li>
+                <li>✔ 3 max trips on dashboard</li>
+                <li>✔ Basic chatbot</li>
+                <li>✔ Basic recommendations</li>
+                <li>✔ Standard destinations</li>
+              </ul>
             </div>
-            <PricingCard
-              title="Premium Pack"
-              price="₱299/month"
-              description="Most popular choice"
-              features={[
-                "Unlimited trips",
-                "Advanced AI recommendations",
-                "Hidden gems inclusion",
-                "Priority support",
-                "Local food recommendations"
-              ]}
-              buttonText="Start Free Trial"
-              popular={true}
-            />
+            <Button className="w-full rounded-full bg-[#0032A0] hover:bg-[#0032A0]/90 text-white text-lg font-semibold py-3 mt-auto">Try Now</Button>
+          </div>
+          {/* Premium Plan Card */}
+          <div className="flex-1 relative bg-[#0032A0] border-4 border-[#FED141] rounded-2xl shadow-xl p-8 flex flex-col items-center justify-between text-white hover:scale-105 hover:shadow-2xl transition-all duration-300">
+            <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 z-10">
+              <div className="bg-[#FED141] text-[#0032A0] px-5 py-1 rounded-full text-sm font-bold shadow">Most Sulit</div>
+            </div>
+            <div className="w-full">
+              <h3 className="text-2xl font-bold text-white mb-2 text-center">Premium</h3>
+              <div className="text-center text-white/80 mb-2">For serious travelers</div>
+              <div className="bg-white rounded-xl py-4 px-2 mb-4 shadow text-center">
+                <div className="text-3xl font-extrabold text-[#0032A0] mb-1">Premium Pack</div>
+                <div className="text-4xl font-extrabold text-[#0032A0] mb-1">₱299<span className="text-lg font-medium">/month</span></div>
+                <div className="text-[#0032A0]/70 text-base mb-2">Most popular choice</div>
+              </div>
+              <ul className="mb-8 space-y-2 text-white text-sm">
+                <li>✔ Unlimited AI generations</li>
+                <li>✔ Unlimited trips on dashboard</li>
+                <li>✔ Premium recommendations</li>
+                <li>✔ Extra trip details</li>
+                <li>✔ Advanced chatbot (LakBot+)</li>
+                <li>✔ Hidden gems & local food</li>
+                <li>✔ Priority features</li>
+              </ul>
+            </div>
+            <Button className="w-full rounded-full bg-[#FED141] hover:bg-[#FED141]/90 text-[#0032A0] text-lg font-semibold py-3 mt-auto">Start Free Trial</Button>
           </div>
         </div>
       </section>
@@ -255,6 +268,102 @@ const Index = () => {
               </CardContent>
             </Card>
           ))}
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="container mx-auto px-4 py-12 md:py-20 relative z-10">
+        <div className="text-center mb-8 md:mb-16">
+          <h2 className="text-3xl md:text-5xl font-bold text-[#0032A0] mb-4 md:mb-6">Frequently Asked Questions</h2>
+          <p className="text-lg md:text-xl text-[#0032A0]/70 max-w-2xl mx-auto">Everything you need to know about LakbAI.</p>
+        </div>
+        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* FAQ Accordions */}
+          <details className="group border border-[#0032A0]/20 rounded-xl p-4 bg-white shadow-sm">
+            <summary className="flex items-center justify-between cursor-pointer text-[#0032A0] font-semibold text-lg group-open:text-[#BF0D3E] transition">
+              What is LakbAI?
+              <span className="ml-2 transition-transform group-open:rotate-180"><svg width="20" height="20" fill="none" stroke="#0032A0" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg></span>
+            </summary>
+            <div className="mt-2 text-[#0032A0]/80 text-base">LakbAI is your AI-powered travel buddy, designed specifically for Filipinos. It helps you plan, optimize, and enjoy your trips around the Philippines with smart recommendations and local insights.</div>
+          </details>
+          <details className="group border border-[#0032A0]/20 rounded-xl p-4 bg-white shadow-sm">
+            <summary className="flex items-center justify-between cursor-pointer text-[#0032A0] font-semibold text-lg group-open:text-[#BF0D3E] transition">
+              How many trips can I plan for free?
+              <span className="ml-2 transition-transform group-open:rotate-180"><svg width="20" height="20" fill="none" stroke="#0032A0" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg></span>
+            </summary>
+            <div className="mt-2 text-[#0032A0]/80 text-base">With the Basic Plan, you can plan up to 3 trips and get 3 AI generations per day. Upgrade to Premium for unlimited trips and generations!</div>
+          </details>
+          <details className="group border border-[#0032A0]/20 rounded-xl p-4 bg-white shadow-sm">
+            <summary className="flex items-center justify-between cursor-pointer text-[#0032A0] font-semibold text-lg group-open:text-[#BF0D3E] transition">
+              What makes Premium worth it?
+              <span className="ml-2 transition-transform group-open:rotate-180"><svg width="20" height="20" fill="none" stroke="#0032A0" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg></span>
+            </summary>
+            <div className="mt-2 text-[#0032A0]/80 text-base">Premium unlocks unlimited trips, advanced AI recommendations, extra trip details, hidden gems, local food spots, and the advanced LakBot+ chatbot for a truly personalized experience.</div>
+          </details>
+          <details className="group border border-[#0032A0]/20 rounded-xl p-4 bg-white shadow-sm">
+            <summary className="flex items-center justify-between cursor-pointer text-[#0032A0] font-semibold text-lg group-open:text-[#BF0D3E] transition">
+              Can I cancel anytime?
+              <span className="ml-2 transition-transform group-open:rotate-180"><svg width="20" height="20" fill="none" stroke="#0032A0" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg></span>
+            </summary>
+            <div className="mt-2 text-[#0032A0]/80 text-base">Yes! You can cancel your Premium subscription anytime. Your account will revert to the Basic Plan at the end of your billing cycle.</div>
+          </details>
+          <details className="group border border-[#0032A0]/20 rounded-xl p-4 bg-white shadow-sm">
+            <summary className="flex items-center justify-between cursor-pointer text-[#0032A0] font-semibold text-lg group-open:text-[#BF0D3E] transition">
+              Is my data secure?
+              <span className="ml-2 transition-transform group-open:rotate-180"><svg width="20" height="20" fill="none" stroke="#0032A0" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg></span>
+            </summary>
+            <div className="mt-2 text-[#0032A0]/80 text-base">Absolutely. We use industry-standard security practices and never share your data with third parties. Your privacy and safety are our top priorities.</div>
+          </details>
+          {/* More FAQs */}
+          <details className="group border border-[#0032A0]/20 rounded-xl p-4 bg-white shadow-sm">
+            <summary className="flex items-center justify-between cursor-pointer text-[#0032A0] font-semibold text-lg group-open:text-[#BF0D3E] transition">
+              How does LakbAI generate itineraries?
+              <span className="ml-2 transition-transform group-open:rotate-180"><svg width="20" height="20" fill="none" stroke="#0032A0" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg></span>
+            </summary>
+            <div className="mt-2 text-[#0032A0]/80 text-base">LakbAI uses Gemini AI (for now) to generate itineraries. It uses the user's input and the destination to generate the itinerary.</div>
+          </details>
+          <details className="group border border-[#0032A0]/20 rounded-xl p-4 bg-white shadow-sm">
+            <summary className="flex items-center justify-between cursor-pointer text-[#0032A0] font-semibold text-lg group-open:text-[#BF0D3E] transition">
+              Can I use LakbAI on mobile?
+              <span className="ml-2 transition-transform group-open:rotate-180"><svg width="20" height="20" fill="none" stroke="#0032A0" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg></span>
+            </summary>
+            <div className="mt-2 text-[#0032A0]/80 text-base">Yes! LakbAI is fully responsive and works great on any device—phone, tablet, or desktop.</div>
+          </details>
+          <details className="group border border-[#0032A0]/20 rounded-xl p-4 bg-white shadow-sm">
+            <summary className="flex items-center justify-between cursor-pointer text-[#0032A0] font-semibold text-lg group-open:text-[#BF0D3E] transition">
+              Can I share my itineraries with friends?
+              <span className="ml-2 transition-transform group-open:rotate-180"><svg width="20" height="20" fill="none" stroke="#0032A0" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg></span>
+            </summary>
+            <div className="mt-2 text-[#0032A0]/80 text-base">Absolutely! You can easily share your itineraries via a link or export them for your friends and family.</div>
+          </details>
+          <details className="group border border-[#0032A0]/20 rounded-xl p-4 bg-white shadow-sm">
+            <summary className="flex items-center justify-between cursor-pointer text-[#0032A0] font-semibold text-lg group-open:text-[#BF0D3E] transition">
+              What payment methods are accepted?
+              <span className="ml-2 transition-transform group-open:rotate-180"><svg width="20" height="20" fill="none" stroke="#0032A0" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg></span>
+            </summary>
+            <div className="mt-2 text-[#0032A0]/80 text-base">We accept all major credit/debit cards and GCash. More payment options coming soon!</div>
+          </details>
+          <details className="group border border-[#0032A0]/20 rounded-xl p-4 bg-white shadow-sm">
+            <summary className="flex items-center justify-between cursor-pointer text-[#0032A0] font-semibold text-lg group-open:text-[#BF0D3E] transition">
+              Can I request new features?
+              <span className="ml-2 transition-transform group-open:rotate-180"><svg width="20" height="20" fill="none" stroke="#0032A0" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg></span>
+            </summary>
+            <div className="mt-2 text-[#0032A0]/80 text-base">Yes! We love feedback. Use the Contact Us form or email us to suggest new features or improvements.</div>
+          </details>
+          <details className="group border border-[#0032A0]/20 rounded-xl p-4 bg-white shadow-sm">
+            <summary className="flex items-center justify-between cursor-pointer text-[#0032A0] font-semibold text-lg group-open:text-[#BF0D3E] transition">
+              What is LakBot?
+              <span className="ml-2 transition-transform group-open:rotate-180"><svg width="20" height="20" fill="none" stroke="#0032A0" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg></span>
+            </summary>
+            <div className="mt-2 text-[#0032A0]/80 text-base">LakBot is your AI-powered travel assistant. It can answer travel questions, give recommendations, and for Premium users, even provide advice based on your actual trips in the dashboard!</div>
+          </details>
+          <details className="group border border-[#0032A0]/20 rounded-xl p-4 bg-white shadow-sm">
+            <summary className="flex items-center justify-between cursor-pointer text-[#0032A0] font-semibold text-lg group-open:text-[#BF0D3E] transition">
+              How does trip selection work for Premium?
+              <span className="ml-2 transition-transform group-open:rotate-180"><svg width="20" height="20" fill="none" stroke="#0032A0" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg></span>
+            </summary>
+            <div className="mt-2 text-[#0032A0]/80 text-base">Premium users can select any of their saved trips in the dashboard and ask LakBot for personalized, context-aware advice and recommendations for that specific trip.</div>
+          </details>
         </div>
       </section>
 

@@ -21,6 +21,14 @@ const Navbar: React.FC<NavbarProps> = ({ user, onSignOut }) => {
     setIsMenuOpen(false);
   };
 
+  const handleLogoClick = () => {
+    if (window.location.pathname === '/') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
     <nav className="bg-gray-50 border-b border-[#0032A0]/20 sticky top-0 z-50">
       <div className="container mx-auto px-4">
@@ -28,7 +36,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onSignOut }) => {
           <div className="flex items-center">
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/')}
+              onClick={handleLogoClick}
               className="flex items-center gap-2 hover:bg-[#0032A0]/10 p-0"
             >
               <img 

@@ -1,7 +1,60 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize the Gemini API client
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+// Initialize the Gemini API with your API key
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
+
+// Get the generative model
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+export const geminiClient = {
+  async generateResponse(
+    message: string,
+    context: {
+      tripDetails?: {
+        destination: string;
+        duration: number;
+        budget: number;
+        transportation: string[];
+        interests: string[];
+      } | null;
+    }
+  ): Promise<string> {
+    try {
+      // Construct the prompt with context
+      let prompt = `You are LakBot, a friendly and knowledgeable Philippine travel assistant. `;
+      
+      if (
+        context.tripDetails &&
+        typeof context.tripDetails.destination === 'string' &&
+        typeof context.tripDetails.duration === 'number' &&
+        Array.isArray(context.tripDetails.transportation) &&
+        Array.isArray(context.tripDetails.interests)
+      ) {
+        prompt += `The user is asking about their trip to ${context.tripDetails.destination} with the following details:
+        - Duration: ${context.tripDetails.duration} days
+        - Budget: ₱${typeof context.tripDetails.budget === 'number' ? context.tripDetails.budget.toLocaleString() : 'N/A'}
+        - Transportation: ${context.tripDetails.transportation.join(', ')}
+        - Interests: ${context.tripDetails.interests.join(', ')}
+        
+        Please provide a helpful and specific response about their trip.`;
+      } else {
+        prompt += `Please provide helpful information about traveling in the Philippines.`;
+      }
+
+      prompt += `\n\nUser message: ${message}`;
+
+      // Generate response
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+
+      return text;
+    } catch (error) {
+      console.error('Error generating response:', error);
+      return "I apologize, but I'm having trouble processing your request right now. Please try again later.";
+    }
+  }
+};
 
 export interface ItineraryDay {
   day: number;

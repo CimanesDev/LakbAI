@@ -29,8 +29,6 @@ const TripPlanningForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [accommodationName, setAccommodationName] = useState('');
   const [accommodationLocation, setAccommodationLocation] = useState('');
-  const [accommodationCheckIn, setAccommodationCheckIn] = useState('');
-  const [accommodationCheckOut, setAccommodationCheckOut] = useState('');
 
   // Filipino-focused destinations
   const popularDestinations = [
@@ -139,12 +137,10 @@ const TripPlanningForm = () => {
           budget: budget ? parseFloat(budget) : null,
           transportation: selectedTransportation,
           interests: selectedInterests,
-          accommodation: (accommodationName || accommodationLocation || accommodationCheckIn || accommodationCheckOut) ? {
-            name: accommodationName,
-            location: accommodationLocation,
-            check_in: accommodationCheckIn,
-            check_out: accommodationCheckOut
-          } : null,
+          accommodation: (accommodationName || accommodationLocation) ? {
+            name: accommodationName || null,
+            location: accommodationLocation || null
+          } : null
         })
         .select()
         .single();
@@ -361,22 +357,6 @@ const TripPlanningForm = () => {
                     onChange={e => setAccommodationLocation(e.target.value)}
                     className="border-[#0032A0]/20 focus:border-[#0032A0]"
                   />
-                  <div className="flex gap-3">
-                    <Input
-                      type="date"
-                      placeholder="Check-in"
-                      value={accommodationCheckIn}
-                      onChange={e => setAccommodationCheckIn(e.target.value)}
-                      className="border-[#0032A0]/20 focus:border-[#0032A0]"
-                    />
-                    <Input
-                      type="date"
-                      placeholder="Check-out"
-                      value={accommodationCheckOut}
-                      onChange={e => setAccommodationCheckOut(e.target.value)}
-                      className="border-[#0032A0]/20 focus:border-[#0032A0]"
-                    />
-                  </div>
                 </div>
 
                 <div className="space-y-4">
